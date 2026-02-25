@@ -1,0 +1,287 @@
+
+.home-container {
+  padding: 16px;
+  min-height: 100vh;
+  background-color: #f5f5f7; /* Apple-like background */
+  padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* Header / Goal Card Styles */
+.home-header {
+  margin-bottom: 24px;
+}
+
+.goal-card-wrapper {
+  padding: 4px; /* Space for shadow */
+}
+
+.goal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.goal-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.goal-icon {
+  font-size: 20px;
+  margin-right: 8px;
+  color: #8e8e93;
+}
+
+.goal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.goal-progress-container {
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.goal-status-tag {
+  position: absolute;
+  right: 0;
+  top: -24px;
+  font-size: 10px;
+  border-radius: 4px;
+  padding: 0 6px;
+}
+
+.goal-progress-bar .ant-progress-bg {
+  height: 6px !important;
+  border-radius: 3px !important;
+}
+
+.goal-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 8px;
+}
+
+/* Category List Styles */
+.category-list .ant-list-split .ant-list-item {
+  border-bottom: none;
+  padding: 12px 0;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 12px;
+  padding: 12px 8px !important;
+}
+
+.category-item:active {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.category-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.expand-icon {
+  color: #c7c7cc;
+  font-size: 14px;
+  transition: transform 0.2s;
+
+  &.expanded {
+    transform: rotate(90deg);
+  }
+}
+
+.category-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+}
+
+.category-title {
+  font-size: 16px;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.category-right {
+  color: #c7c7cc;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-icon {
+  color: #c7c7cc;
+  padding: 4px;
+}
+
+.add-icon:hover {
+  color: #007aff;
+}
+
+/* Task List Styles */
+.task-list {
+  padding-left: 52px; /* Indent to align with category title */
+  padding-right: 8px;
+  padding-bottom: 8px;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-checkbox {
+  margin-right: 12px;
+  margin-top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #c7c7cc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-checkbox.completed {
+  background-color: #c7c7cc; /* Or category color */
+  border-color: #c7c7cc;
+}
+
+.task-content {
+  flex: 1;
+}
+
+.task-title {
+  font-size: 15px;
+  color: #1d1d1f;
+  margin-bottom: 2px;
+}
+
+.task-title.completed {
+  color: #8e8e93;
+  text-decoration: line-through;
+}
+
+.task-desc {
+  font-size: 13px;
+  color: #8e8e93;
+}
+
+.task-date {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 4px;
+}
+
+/* Task Form (New Item) Styles */
+.task-form-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 2000;
+  animation: slideUp 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.task-form-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.05);
+}
+
+.task-form-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.task-form-content {
+  padding: 20px;
+  flex: 1;
+}
+
+.form-item {
+  margin-bottom: 24px;
+}
+
+.task-input-title {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  padding: 0 !important;
+  color: #1d1d1f !important;
+}
+
+.task-input-title::placeholder {
+  color: #c7c7cc;
+}
+
+.task-input-desc {
+  font-size: 16px !important;
+  padding: 0 !important;
+  color: #333 !important;
+  resize: none !important;
+}
+
+.task-input-desc::placeholder {
+  color: #c7c7cc;
+}
+
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8e8e93;
+}
+
+.date-icon {
+  font-size: 18px;
+}
+
+.task-datepicker {
+  padding: 0 !important;
+  width: auto !important;
+}
+
+.task-datepicker input {
+  font-size: 16px !important;
+  color: #8e8e93 !important;
+}

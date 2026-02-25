@@ -1,0 +1,26 @@
+/* 顶部导航预留空间 */
+.app-container {
+  padding-top: 64px;
+}
+
+.page-container {
+  min-height: 100vh;
+  background: #f5f5f7;
+  padding: 20px;
+}
+
+/* 禁用浏览器和微信的滑动返回 */
+body {
+  overscroll-behavior: none;  /* 禁用滑动返回 */
+  touch-action: pan-x pan-y;  /* 只允许垂直和水平滚动 */
+  position: fixed;            /* 固定位置 */
+  width: 100%;               /* 占满宽度 */
+  height: 100%;              /* 占满高度 */
+  overflow: auto;            /* 允许滚动 */
+}
+
+/* 针对 iOS Safari */
+html {
+  overflow: hidden;
+  height: 100%;
+}

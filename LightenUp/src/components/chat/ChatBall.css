@@ -1,0 +1,58 @@
+.chat-ball {
+  width: auto;
+  min-width: 60px;
+  height: 40px;
+  border-radius: 20px;
+  background: #007AFF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  padding: 0 16px;
+}
+
+.ball-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ball-icon {
+  font-size: 16px;
+}
+
+.ball-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 优化小球悬停效果 */
+.chat-ball:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: #0066CC;
+}
+
+.chat-ball:active {
+  transform: translateY(1px);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .chat-ball {
+    min-width: 50px;
+    height: 36px;
+    padding: 0 12px;
+  }
+  
+  .ball-icon {
+    font-size: 14px;
+  }
+  
+  .ball-text {
+    font-size: 13px;
+  }
+} 

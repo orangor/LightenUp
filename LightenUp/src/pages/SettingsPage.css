@@ -1,0 +1,13 @@
+.settings-page {
+  padding: 20px;
+}
+
+.settings-card {
+  margin-top: 20px;
+  max-width: 600px;
+}
+
+.logout-button {
+  margin-top: 20px;
+  width: 100%;
+}

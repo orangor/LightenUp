@@ -1,0 +1,456 @@
+:root {
+  /* 结构尺寸 */
+  --nav-height: 44px;
+  --nav-radius: 8px;
+  --nav-blur: 12px;
+
+  /* 苹果风基础配色（更纯净、克制） */
+  --surface-0: rgba(255, 255, 255, 0.68);
+  --surface-1: rgba(255, 255, 255, 0.88);
+  --border: rgba(0, 0, 0, 0.04);
+  --border-strong: rgba(0, 0, 0, 0.08);
+  --text: #1d1d1f;
+  --text-muted: #6e6e73;
+  --accent: #0070c9;
+  --accent-2: #0a84ff;
+
+  /* 更克制的阴影与高亮 */
+  --grad-bar: var(--accent);
+  --grad-hover: rgba(0, 0, 0, 0.04);
+  --grad-active: rgba(0, 0, 0, 0.06);
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --ring: 0 0 0 2px rgba(0, 112, 201, 0.18);
+
+  /* 动画与过渡 */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 140ms;
+  --dur: 200ms;
+}
+
+/* 明亮主题（备用） */
+.theme-light {
+  --surface-0: rgba(255, 255, 255, 0.72);
+  --surface-1: rgba(255, 255, 255, 0.92);
+  --border: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --text: #1d1d1f;
+  --text-muted: #6e6e73;
+  --accent: #0070c9;
+  --accent-2: #0a84ff;
+  --grad-bar: var(--accent);
+  --grad-hover: rgba(0, 0, 0, 0.04);
+  --grad-active: rgba(0, 0, 0, 0.06);
+}
+
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  backdrop-filter: saturate(120%) blur(var(--nav-blur));
+  background: var(--surface-0);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--elevation-1);
+  z-index: 1000;
+}
+
+.top-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: none; /* 移除彩色光晕，保持纯净 */
+}
+
+.top-nav .nav-inner {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+}
+
+.brand:hover { color: #111; transform: translateY(-1px); }
+
+.nav-items { display: flex; align-items: center; gap: 8px; }
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--nav-radius);
+  color: var(--text-muted);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+/* Active 下划线指示器（纯色、克制） */
+.nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 1px;
+  border-radius: 1px;
+  background: var(--grad-bar);
+}
+
+/* Hover 细线指示器（非 active 时，淡化）*/
+.nav-item:not(.active):hover::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 1px;
+  border-radius: 1px;
+  background: var(--grad-bar);
+  opacity: 0.35;
+}
+
+.nav-item:hover {
+  background: transparent; /* 完全去除按钮感 */
+  color: var(--text);
+}
+
+/* 悬停时纯文字颜色变化（无渐变、无发光） */
+.nav-item:hover .nav-text { color: var(--accent); }
+
+.nav-item:hover .nav-icon { color: var(--accent); filter: none; }
+
+.nav-item:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.nav-item.active {
+  color: var(--text);
+  background: transparent;
+  box-shadow: none;
+}
+
+.nav-item.active .nav-text { font-weight: 600; letter-spacing: 0.2px; }
+.nav-item.active .nav-icon { color: var(--accent); }
+
+.nav-icon { font-size: 16px; line-height: 1; color: currentColor; }
+
+.nav-text { font-size: 12px; letter-spacing: 0.2px; line-height: 1.5; }
+
+/* 子菜单（下拉） */
+.nav-item.has-children::after {
+  content: "▾";
+  font-size: 10px;
+  margin-left: 2px;
+  color: currentColor;
+  opacity: 0.9;
+}
+
+.submenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  display: none;
+  min-width: 200px;
+  padding: 8px;
+  border-radius: var(--nav-radius);
+  background: var(--surface-1);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  box-shadow: var(--elevation-1);
+  transform-origin: 16px -8px;
+  animation: fadeSlideUp var(--dur) var(--ease);
+}
+
+.nav-item.has-children:hover .submenu,
+.nav-item.has-children:focus-within .submenu { display: block; }
+
+.submenu-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--text-muted);
+}
+
+.submenu-item:hover { background: var(--grad-hover); color: var(--text); }
+
+.submenu-item.active {
+  color: var(--accent);
+  font-weight: 600;
+  position: relative;
+  padding-left: 14px; /* 为左侧细线留出微小空间 */
+}
+
+.submenu-item.active::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60%;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+/* 页面内容容器：为顶部导航预留空间 */
+.app-container { padding-top: calc(var(--nav-height) + env(safe-area-inset-top, 0px)); }
+
+/* 响应式处理：窄屏隐藏文字，仅显示图标 */
+@media (max-width: 768px) {
+  .top-nav .nav-inner { padding: 0 12px; }
+  .brand { font-size: 16px; }
+  .nav-text { display: none; }
+}
+
+/* 移动端（Apple 风）适配：更适合触摸与安全区 */
+@media (max-width: 834px) {
+  :root {
+    --nav-height: 52px; /* 保持 52 更贴近触摸，桌面仍 44 */
+    --nav-blur: 8px;
+    --nav-radius: 10px;
+  }
+
+  .top-nav {
+    height: var(--nav-height);
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    backdrop-filter: saturate(110%) blur(var(--nav-blur));
+    border-bottom-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .brand { font-size: 15px; letter-spacing: 0.1px; }
+
+  .nav-items { gap: 12px; }
+
+  .nav-item {
+    padding: 10px 12px; /* 增大触摸区域 */
+    gap: 10px;
+    border-radius: var(--nav-radius);
+  }
+
+  .nav-icon { font-size: 20px; }
+  .nav-text { display: none; font-size: 13px; }
+
+  /* 主导航下划线保持发丝线，但更贴近文字 */
+  .nav-item.active::before,
+  .nav-item:not(.active):hover::before {
+    bottom: 3px;
+    height: 1px;
+  }
+
+  /* 子菜单改为抽屉式覆盖，便于移动端触摸 */
+  .submenu {
+    position: fixed;
+    top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    min-width: 100%;
+    padding: 12px;
+    border-radius: 0 0 12px 12px;
+    backdrop-filter: blur(10px); /* 更克制 */
+    border: 1px solid var(--border);
+    box-shadow: var(--elevation-2);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .submenu-item {
+    padding: 12px 14px; /* 稍紧凑 */
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .submenu-item.active::before { left: 12px; height: 100%; }
+}
+
+@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 移动端汉堡与抽屉基础样式（默认隐藏，仅在断点下显示） */
+.hamburger {
+  display: none;
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+  width: 36px;
+  height: 36px;
+}
+.hamburger:hover { background: var(--grad-hover); }
+/* 使用绝对定位的三条 bar，避免 flex 间距导致的错位 */
+.hamburger .bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+.hamburger .bar.top { transform: translate(-50%, -8px); }
+.hamburger .bar.middle { transform: translate(-50%, 0px); }
+.hamburger .bar.bottom { transform: translate(-50%, 8px); }
+/* 打开态过渡为 X */
+.hamburger.open .bar.top { transform: translate(-50%, 0px) rotate(45deg); }
+.hamburger.open .bar.middle { opacity: 0; }
+.hamburger.open .bar.bottom { transform: translate(-50%, 0px) rotate(-45deg); }
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: calc(var(--nav-height) + env(safe-area-inset-top, 0px));
+  right: 0;
+  bottom: 0;
+  width: min(86vw, 340px);
+  transform: translateX(100%);
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  background: var(--surface-1);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--elevation-2);
+  backdrop-filter: blur(14px);
+  z-index: 2100;
+  will-change: transform;
+}
+.mobile-drawer.open { transform: translateX(0); }
+
+.drawer-content {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-item {
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.drawer-item:hover { background: var(--grad-hover); }
+.drawer-item.active { color: var(--accent); font-weight: 600; }
+
+.drawer-children { margin-left: 10px; padding-left: 8px; border-left: 1px solid var(--border); }
+
+.drawer-subitem {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.drawer-subitem:hover { background: var(--grad-hover); color: var(--text); }
+.drawer-subitem.active { color: var(--accent); font-weight: 600; }
+
+@media (max-width: 834px) {
+  /* 显示汉堡、隐藏顶部的原始 nav-items */
+  .hamburger { display: inline-flex; align-items: center; justify-content: center; }
+  .top-nav .nav-inner { gap: 8px; }
+  .nav-items { display: none; }
+}
+
+/* 底部导航栏样式 (默认隐藏，移动端显示) */
+.bottom-nav-bar {
+  display: none;
+}
+
+@media (max-width: 834px) {
+  /* 隐藏顶部导航 */
+  .top-nav { display: none; }
+  
+  /* 调整容器内边距，移除顶部留白，增加底部留白 */
+  .app-container {
+    padding-top: env(safe-area-inset-top, 20px) !important;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 20px));
+  }
+
+  /* 显示底部导航 */
+  .bottom-nav-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(56px + env(safe-area-inset-bottom, 20px));
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    justify-content: space-around;
+    align-items: flex-start;
+    padding-top: 8px;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    cursor: pointer;
+    color: #999;
+    gap: 4px;
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .bottom-nav-item:active {
+    transform: scale(0.92);
+  }
+  
+  .bottom-nav-item.active {
+    color: #1d1d1f; /* Apple dark gray/black */
+  }
+
+  .bottom-nav-item .nav-text {
+    display: block !important;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  
+  .bottom-nav-item .icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    position: relative;
+  }
+
+  /* 选中时的图标动画或样式增强 */
+  .bottom-nav-item.active .icon-container {
+    color: #0070c9; /* Apple Blue or stick to black/dark if strictly following the image which looks dark */
+    color: #1d1d1f;
+  }
+}

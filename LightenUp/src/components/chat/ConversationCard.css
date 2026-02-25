@@ -1,0 +1,163 @@
+.conversation-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+/* 用户消息样式 */
+.user-message {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.user-message .message-content {
+  max-width: 85%;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #1a1a1a, #333333);
+  color: white;
+  border-radius: 20px;
+  border-bottom-right-radius: 6px;
+  font-size: 15px;
+  line-height: 1.7;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 助手回复区域 */
+.assistant-response {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* 思考过程区域 */
+.reasoning-section {
+  max-width: 85%;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.reasoning-toggle {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: rgba(0, 0, 0, 0.01);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.reasoning-toggle:hover {
+  opacity: 0.8;
+}
+
+.reasoning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  font-size: 10px;
+  color: #999999;
+}
+
+.reasoning-label {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  text-transform: none;
+  color: #999999;
+  display: flex;
+  align-items: center;
+  font-style: italic;
+}
+
+.toggle-icon {
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+.reasoning-section.collapsed .reasoning-content {
+  display: none;
+}
+ 
+
+.reasoning-content {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: #666666;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.reasoning-message {
+  margin-bottom: 8px;
+}
+
+.reasoning-message:last-child {
+  margin-bottom: 0;
+}
+
+/* 回答内容区域 */
+.content-section {
+  max-width: 85%;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.content-section.has-reasoning {
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  margin-top: -1px;
+}
+
+.content-message {
+  padding: 24px 28px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 打字动画 */
+.thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.thinking-dots span {
+  width: 3px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0 2px;
+  border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(0.7); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+}

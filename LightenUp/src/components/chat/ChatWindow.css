@@ -1,0 +1,267 @@
+.chat-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  cursor: move;
+  user-select: none;
+}
+
+.chat-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+  pointer-events: none;
+}
+
+.minimize-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: #f5f5f7;
+  border: none;
+  color: #666;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.minimize-button:hover {
+  background: #e5e5e7;
+}
+
+.minimize-icon {
+  display: inline-block;
+  line-height: 1;
+  transform: translateY(-2px);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  scroll-behavior: smooth;
+}
+
+.message {
+  display: flex;
+  width: 100%;
+  margin-bottom: 24px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.message.user {
+  align-items: flex-end;
+}
+
+.message.assistant {
+  align-items: flex-start;
+}
+
+.message-content {
+  max-width: 85%;
+  min-width: 50px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-sizing: border-box;
+  user-select: text;
+}
+
+.message.user .message-content {
+  background: linear-gradient(135deg, #0066CC, #007AFF);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 122, 255, 0.15);
+}
+
+.message.assistant .message-content {
+  background: #F5F5F7;
+  color: #1d1d1f;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-bottom-left-radius: 4px;
+}
+
+.message.reasoning .message-content {
+  background: rgba(245, 245, 247, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  max-width: 85%;
+  min-width: 50px;
+  width: auto;
+}
+
+.reasoning-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.reasoning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.reasoning-label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+}
+
+.message.reasoning.collapsed .message-content {
+  display: none;
+}
+
+.message.error .message-content {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.thinking-dots span {
+  width: 3px;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0 2px;
+  border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(0.7); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
+}
+
+/* 输入区域容器：苹果风布局与细节 */
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: saturate(110%) blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.textarea-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.send-textarea {
+  width: 100%;
+  height: 44px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  outline: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 22px;
+  resize: none;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  transition: border-color 140ms cubic-bezier(0.2, 0, 0, 1), box-shadow 140ms cubic-bezier(0.2, 0, 0, 1), background 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+textarea::placeholder { color: #8e8e93; }
+textarea:focus { border-color: #0a84ff; box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.25); background: #fff; }
+textarea:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.send-button {
+  height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 14px;
+  background: #0A84FF; /* 苹果蓝 */
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.25);
+  transition: transform 140ms cubic-bezier(0.2, 0, 0, 1), box-shadow 140ms cubic-bezier(0.2, 0, 0, 1), background 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.send-button:hover { background: #0b7af5; box-shadow: 0 6px 16px rgba(10, 132, 255, 0.28); }
+.send-button:active { transform: translateY(1px); box-shadow: 0 3px 10px rgba(10, 132, 255, 0.22); }
+.send-button:disabled { background: #bcd8ff; color: #fff; cursor: not-allowed; box-shadow: none; }
+
+@media (max-width: 480px) {
+  .input-container { padding: 6px; gap: 8px; }
+  textarea { height: 40px; border-radius: 12px; font-size: 14px; }
+  .send-button { height: 40px; padding: 0 14px; border-radius: 12px; font-size: 14px; }
+}
+.send-button:disabled {
+  background: #B4B4B4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .messages {
+    position: absolute;
+    top: 52px;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    height: calc(100% - 104px);
+  }
+
+  .input-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px;
+    z-index: 2;
+  }
+
+  .send-button {
+    min-width: 60px;
+  }
+}

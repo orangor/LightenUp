@@ -1,0 +1,49 @@
+.word-reader {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-section {
+  margin-bottom: 20px;
+}
+
+.file-input {
+  padding: 10px;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.file-name {
+  margin-top: 10px;
+  color: #666;
+}
+
+.content-preview {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.content-preview h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.content-area {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.content-area p {
+  margin: 8px 0;
+  line-height: 1.5;
+  color: #333;
+}
