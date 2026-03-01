@@ -10,8 +10,12 @@ const options = {
     },
     servers: [
       {
+        url: process.env.API_URL || '/',
+        description: 'Default Server',
+      },
+      {
         url: 'http://localhost:8000',
-        description: '开发服务器',
+        description: 'Local Development',
       },
     ],
     components: {

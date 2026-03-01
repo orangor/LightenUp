@@ -7,7 +7,7 @@ const envBaseUrl =
   undefined
 
 const DEFAULT_BASE = {
-  production: 'http://www.aipeak.asia',
+  production: 'http://moxae.com',
   staging: 'http://43.143.51.202:8085',
   development: 'http://localhost:8000', // daydoserve 默认端口
 } as const
@@ -17,6 +17,32 @@ export function getBaseURL(): string {
   const nodeEnv = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development'
   return override || envBaseUrl || DEFAULT_BASE[(nodeEnv as keyof typeof DEFAULT_BASE) || 'development']
 }
+
+// export function getBaseURL(): string {
+//   // 1. 拦截 LocalStorage 的手动覆盖（防止本地测试的脏数据带到线上）
+//   const override = (typeof window !== 'undefined' && window.localStorage.getItem('apiBase')) || undefined
+//   if (override) return override
+
+//   // 2. 获取环境变量中的 BaseURL（如果有的话）
+//   const envBaseUrl =
+//     (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
+//     (typeof process !== 'undefined' && (process as any).env?.REACT_APP_API_BASE_URL) ||
+//     undefined
+//   if (envBaseUrl) return envBaseUrl
+
+//   // 3. 核心修复：正确判断 Vite 和 Webpack 的生产环境
+//   const isProd =
+//     (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production') ||
+//     (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production')
+
+//   // 4. 生产环境：返回空字符串（完美配合 Nginx 的 /api/ 转发，解决跨域）
+//   if (isProd) {
+//     return ''
+//   }
+
+//   // 5. 本地开发环境兜底：返回 localhost
+//   return 'http://localhost:8000'
+// }
 
 // 所有端点分组集中在此处，便于统一维护与快速添加
 export const endpoints = {

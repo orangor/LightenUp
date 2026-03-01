@@ -7,7 +7,7 @@ export const helmetConfig = {
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", ...(process.env.API_URL ? [process.env.API_URL] : [])],
     },
   },
   xssFilter: true,

@@ -62,7 +62,8 @@ export const sendEmail = (to: string, subject: string, html: string): Promise<vo
 }
 
 export const sendVerificationEmail = async (to: string, token: string): Promise<void> => {
-  const verificationUrl = `http://localhost:8000/verify-email?token=${token}`
+  const baseUrl = process.env.APP_URL || 'http://localhost:8000'
+  const verificationUrl = `${baseUrl}/verify-email?token=${token}`
   const html = `
     <h1>验证您的邮箱</h1>
     <p>请点击下面的链接验证您的邮箱：</p>
@@ -73,7 +74,8 @@ export const sendVerificationEmail = async (to: string, token: string): Promise<
 }
 
 export const sendPasswordResetEmail = async (to: string, token: string): Promise<void> => {
-  const resetUrl = `http://localhost:8000/reset-password?token=${token}`
+  const baseUrl = process.env.APP_URL || 'http://localhost:8000'
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`
   const html = `
     <h1>重置密码</h1>
     <p>请点击下面的链接进入重置密码页面：</p>
