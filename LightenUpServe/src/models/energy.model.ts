@@ -1,5 +1,7 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2'
 import db from '../config/database'
+import fs from 'fs'
+import path from 'path'
 
 export interface EnergyType {
   id: number
@@ -66,6 +68,15 @@ export interface CreateMomentInput {
   visibility?: number
   relatedMomentId?: number
   media?: { mediaType: number; fileUrl: string; sortOrder: number }[]
+}
+
+export interface TrendPoint {
+  moment_id?: number
+  energy_type_id?: number
+  energy_name?: string
+  level_value: number
+  created_at: Date | string
+  count?: number
 }
 
 export default class EnergyModel {
@@ -156,9 +167,14 @@ export default class EnergyModel {
       // whereSql += ' AND user_id IN (SELECT following_id FROM user_follows WHERE follower_id = ?)'
       // values.push(userId)
     } else {
-      // 公开的或者自己的
-      whereSql += ' AND (visibility = 1 OR (visibility = 2) OR (user_id = ?))' // 树洞(2)也可见，只是匿名
-      values.push(userId || 0)
+      // 仅显示自己的动态 (私密模式)
+      if (userId) {
+        whereSql += ' AND user_id = ?'
+        values.push(userId)
+      } else {
+        // 未登录看不到任何动态
+        whereSql += ' AND 1=0'
+      }
     }
 
     if (energyLevel) {
@@ -275,5 +291,168 @@ export default class EnergyModel {
       [userId],
     )
     return rows as EnergyMoment[]
+  }
+
+  static async getTrend(params: {
+    userId: number
+    startDate?: string
+    endDate?: string
+    days?: number
+    limit?: number
+    groupBy?: 'raw' | 'hour' | 'day'
+  }): Promise<{ points: TrendPoint[] }> {
+    const { userId, startDate, endDate, days = 30, limit, groupBy = 'raw' } = params
+    const whereParts: string[] = ['m.user_id = ?']
+    const values: any[] = [userId]
+
+    if (groupBy !== 'raw') {
+      // 当非 raw 时，继续使用按天的逻辑过滤
+      if (startDate) {
+        whereParts.push('m.created_at >= ?')
+        values.push(new Date(startDate))
+      } else if (days && days > 0) {
+        const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+        whereParts.push('m.created_at >= ?')
+        values.push(from)
+      }
+      if (endDate) {
+        whereParts.push('m.created_at <= ?')
+        values.push(new Date(endDate))
+      }
+    }
+
+    const whereSql = whereParts.join(' AND ')
+    let sql = ''
+
+    if (groupBy === 'day') {
+      sql = `SELECT 
+         DATE(m.created_at) as created_at,
+         AVG(et.level_value) as level_value,
+         COUNT(*) as count
+       FROM energy_moments m
+       JOIN cfg_energy_types et ON m.energy_type_id = et.id
+       WHERE ${whereSql}
+       GROUP BY DATE(m.created_at)
+       ORDER BY created_at ASC`
+    } else if (groupBy === 'hour') {
+      sql = `SELECT 
+         DATE_FORMAT(m.created_at, '%Y-%m-%d %H:00:00') as created_at,
+         AVG(et.level_value) as level_value,
+         COUNT(*) as count
+       FROM energy_moments m
+       JOIN cfg_energy_types et ON m.energy_type_id = et.id
+       WHERE ${whereSql}
+       GROUP BY created_at
+       ORDER BY created_at ASC`
+    } else {
+      // Default: raw，按照最新条数查询
+      const limitVal = limit && limit > 0 ? limit : 50
+      sql = `
+      SELECT * FROM (
+        SELECT 
+           m.id as moment_id,
+           m.energy_type_id,
+           m.created_at,
+           m.content_text as note,
+           et.name as energy_name,
+           et.level_value,
+           et.icon_code as energy_icon
+         FROM energy_moments m
+         JOIN cfg_energy_types et ON m.energy_type_id = et.id
+         WHERE ${whereSql}
+         ORDER BY m.created_at DESC
+         LIMIT ${limitVal}
+      ) as sub
+      ORDER BY created_at ASC`
+    }
+
+    const [rows] = await db.execute<RowDataPacket[]>(sql, values)
+
+    return { points: rows as unknown as TrendPoint[] }
+  }
+
+  static async deleteMoment(momentId: number, userId: number): Promise<boolean> {
+    const connection = await db.getConnection()
+    await connection.beginTransaction()
+
+    try {
+      // 1. 检查权限
+      const [rows] = await connection.execute<RowDataPacket[]>(
+        'SELECT id FROM energy_moments WHERE id = ? AND user_id = ?',
+        [momentId, userId],
+      )
+
+      if (rows.length === 0) {
+        await connection.rollback()
+        return false // 不存在或无权删除
+      }
+
+      // 2. 获取关联媒体文件，以便后续删除
+      const [mediaRows] = await connection.execute<RowDataPacket[]>(
+        'SELECT file_url FROM moment_media WHERE moment_id = ?',
+        [momentId],
+      )
+
+      // 3. 删除关联媒体记录
+      await connection.execute('DELETE FROM moment_media WHERE moment_id = ?', [momentId])
+
+      // 4. 删除关联互动
+      await connection.execute('DELETE FROM moment_interactions WHERE moment_id = ?', [momentId])
+
+      // 4.5 清理关联引用：如果有其他动态引用了此动态（related_moment_id），将其置空并重置闭环状态
+      await connection.execute(
+        'UPDATE energy_moments SET related_moment_id = NULL, is_closed_loop = 0 WHERE related_moment_id = ?',
+        [momentId],
+      )
+
+      // 5. 删除动态本身
+      const [delResult] = await connection.execute<ResultSetHeader>('DELETE FROM energy_moments WHERE id = ?', [
+        momentId,
+      ])
+
+      if (delResult.affectedRows === 0) {
+        throw new Error(`Failed to delete moment record ${momentId}`)
+      }
+
+      await connection.commit()
+
+      // 6. 异步删除物理文件 (不阻塞返回，也不影响事务)
+      this.deletePhysicalFiles(mediaRows as { file_url: string }[])
+
+      return true
+    } catch (error) {
+      await connection.rollback()
+      throw error
+    } finally {
+      connection.release()
+    }
+  }
+
+  private static deletePhysicalFiles(mediaItems: { file_url: string }[]) {
+    // uploads/assets 目录的绝对路径
+    // src/models -> src -> root -> uploads/assets
+    const assetsDir = path.join(__dirname, '../../uploads/assets')
+
+    mediaItems.forEach((item) => {
+      const url = item.file_url
+      if (!url) return
+
+      // 提取 /assets/ 之后的部分
+      const splitKey = '/assets/'
+      const index = url.indexOf(splitKey)
+      if (index !== -1) {
+        const relPath = url.substring(index + splitKey.length)
+        // 防止路径遍历攻击 (虽然是删除操作，但还是要小心)
+        const safePath = path.normalize(relPath).replace(/^(\.\.[\/\\])+/, '')
+        const fullPath = path.join(assetsDir, safePath)
+
+        fs.unlink(fullPath, (err) => {
+          // 忽略文件不存在的错误
+          if (err && err.code !== 'ENOENT') {
+            console.error('[EnergyModel] Failed to delete file:', fullPath, err)
+          }
+        })
+      }
+    })
   }
 }

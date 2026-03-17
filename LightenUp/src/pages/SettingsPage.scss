@@ -1,0 +1,257 @@
+@import '../styles/variables';
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Premium "Morning Glow" Mesh Gradient Background */
+  background-color: #F8F9FE;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(235, 244, 255, 1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, rgba(243, 232, 255, 0.8) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, rgba(255, 241, 236, 0.8) 0, transparent 50%);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  position: relative;
+  padding: 32px;
+  padding-bottom: 100px; /* Space for bottom nav */
+
+  /* Subtle Noise Texture */
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  h1 {
+    font-family: "SF Pro Display", sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #1A202C;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .settings-content {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-size: 13px;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 24px 0 8px 16px;
+    font-weight: 500;
+  }
+
+  .settings-section {
+    /* Glassmorphism Card Style - iOS Grouped List */
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    /* Soft Shadow */
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.02),
+      0 2px 4px -1px rgba(0, 0, 0, 0.02),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+
+    /* User Profile Specific Styles */
+    &.user-profile-section {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .user-avatar {
+          background: linear-gradient(135deg, #7B61FF 0%, #FFD166 100%);
+          box-shadow: 0 4px 10px rgba(123, 97, 255, 0.3);
+          border: 2px solid #fff;
+        }
+
+        .user-details {
+          .user-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2D3748;
+            margin: 0 0 4px 0;
+            font-family: "SF Pro Display", sans-serif;
+          }
+          
+          .user-email {
+            font-size: 14px;
+            color: #718096;
+            margin: 0;
+          }
+        }
+      }
+
+      .edit-profile-btn {
+        color: #CBD5E0;
+        font-size: 16px;
+      }
+    }
+
+    /* List Items */
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: transparent;
+      transition: background 0.2s;
+      position: relative;
+
+      /* Separator Line */
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 60px; /* Indent for icon */
+        right: 0;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      &.clickable {
+        cursor: pointer;
+        &:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+        &:active {
+          background: rgba(255, 255, 255, 0.8);
+        }
+      }
+
+      .item-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .icon-wrapper {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: #F7FAFC; /* Fallback */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          color: #4A5568;
+          
+          /* Icon Colors based on context - optional, can be customized per icon */
+          &.destructive {
+            color: #FF4D4F;
+            background: rgba(255, 77, 79, 0.1);
+          }
+        }
+
+        .item-title {
+          font-size: 16px;
+          color: #2D3748;
+          font-weight: 500;
+
+          &.destructive-text {
+            color: #FF4D4F;
+          }
+        }
+      }
+
+      .item-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .item-value {
+          font-size: 15px;
+          color: #A0AEC0;
+        }
+
+        .arrow-icon {
+          font-size: 14px;
+          color: #CBD5E0;
+        }
+      }
+
+      .item-center {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        
+        .destructive-text {
+          color: #FF4D4F;
+          font-weight: 600;
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  .version-footer {
+    text-align: center;
+    font-size: 12px;
+    color: #CBD5E0;
+    margin-top: 40px;
+    padding-bottom: 20px;
+  }
+}
+
+/* Mobile Adaptation */
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 20px;
+    padding-bottom: 100px;
+    
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    
+    .settings-section {
+      &.user-profile-section {
+        padding: 16px;
+        
+        .user-info {
+          .user-avatar {
+            width: 56px;
+            height: 56px;
+            line-height: 56px;
+            font-size: 24px;
+          }
+          
+          .user-details {
+            .user-name {
+              font-size: 18px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

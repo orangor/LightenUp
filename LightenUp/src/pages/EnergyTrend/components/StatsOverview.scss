@@ -1,0 +1,110 @@
+@import '../../../styles/variables.scss';
+
+/* 统计概览卡片 */
+.stats-overview {
+  display: flex;
+  align-items: center;
+  /* 
+    Premium Glassmorphism
+    Update to Morning Glow Style 
+  */
+  background: linear-gradient(
+    145deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  border-radius: 24px;
+  padding: 32px 40px;
+  margin-bottom: 32px;
+  
+  /* Glass Edge & Shadow */
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  
+  border: none;
+  
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    align-items: flex-start; /* Align left for cleaner look */
+    padding: 0 16px;
+
+    .stat-label {
+      font-size: 12px;
+      color: #A0AEC0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2D3748;
+      font-family: 'SF Pro Display', sans-serif;
+      letter-spacing: -0.5px;
+    }
+
+    &.main-stat {
+      flex: 1.5;
+      padding-left: 0;
+      
+      .stat-label {
+        font-size: 13px;
+        color: #718096;
+      }
+      .stat-value {
+        font-size: 36px;
+        /* Gradient Text */
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -1.5px;
+      }
+    }
+  }
+
+  .stat-divider {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.05), rgba(0,0,0,0));
+    margin: 0 24px;
+  }
+}
+
+/* 移动端适配调整 */
+@media (max-width: 768px) {
+  .stats-overview {
+    padding: 24px 20px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    
+    .stat-item {
+      padding: 0 8px;
+      align-items: center; /* Center align on mobile */
+      
+      &.main-stat {
+        padding-left: 8px;
+        .stat-value {
+          font-size: 28px;
+        }
+      }
+      
+      .stat-value {
+        font-size: 20px;
+      }
+    }
+    
+    .stat-divider {
+      height: 32px;
+      margin: 0 12px;
+    }
+  }
+}

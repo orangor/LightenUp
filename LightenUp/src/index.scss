@@ -17,6 +17,13 @@ body {
   width: 100%;               /* 占满宽度 */
   height: 100%;              /* 占满高度 */
   overflow: auto;            /* 允许滚动 */
+
+  /* 隐藏滚动条 */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* 针对 iOS Safari */

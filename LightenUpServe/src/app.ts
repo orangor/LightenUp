@@ -34,8 +34,8 @@ app.use(helmet(helmetConfig))
 app.use(cors(corsOptions))
 
 // 3. 解析请求体
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 app.use(cookieParser()) // CSRF 需要
 app.use(xssMiddleware) // 添加 XSS 中间件
 
@@ -66,7 +66,8 @@ app.use((req, res, next) => {
 })
 
 // 静态资源：/assets -> uploads/assets
-const uploadsAssetsDir = path.join(process.cwd(), 'uploads', 'assets')
+// 使用 __dirname 确保在开发(src)和生产(dist)环境中都能正确找到项目根目录下的 uploads
+const uploadsAssetsDir = path.join(__dirname, '../uploads', 'assets')
 try {
   fs.mkdirSync(uploadsAssetsDir, { recursive: true })
 } catch {}

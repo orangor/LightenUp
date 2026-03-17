@@ -27,7 +27,7 @@ export class RouteScanner {
     this.routes = []
 
     files.forEach((file) => {
-      if (file.endsWith('.controller.ts')) {
+      if (file.endsWith('.controller.ts') || file.endsWith('.controller.js')) {
         const controllerPath = path.join(controllersPath, file)
 
         const controller = require(controllerPath).default

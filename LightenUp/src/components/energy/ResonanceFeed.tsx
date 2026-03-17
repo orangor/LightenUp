@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { EnergyService } from '../../api/energyService';
 import { EnergyMoment } from '../../api/energyTypes';
-import { Tooltip, Image } from 'antd';
+import { Tooltip, Image, Modal, message, Button } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useAuth } from '../../contexts/AuthContext';
 import './ResonanceFeed.scss';
 
 const ResonanceFeed: React.FC = () => {
   const [moments, setMoments] = useState<EnergyMoment[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -21,6 +24,25 @@ const ResonanceFeed: React.FC = () => {
     };
     fetchFeed();
   }, []);
+
+  const handleDelete = (momentId: number) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: '删除后无法恢复，确定要删除这条动态吗？',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await EnergyService.deleteMoment(momentId);
+          message.success('删除成功');
+          setMoments((prev) => prev.filter((m) => m.id !== momentId));
+        } catch (error) {
+          console.error('Failed to delete moment:', error);
+          message.error('删除失败，请重试');
+        }
+      },
+    });
+  };
 
   const formatDate = (dateStr: string) => {
     try {
@@ -75,7 +97,22 @@ const ResonanceFeed: React.FC = () => {
               <span className="user-name">
                 {moment.energy_type?.name.split('/')[0]}
               </span>
-              <span className="time">{formatDate(moment.created_at)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="time">{formatDate(moment.created_at)}</span>
+                {user?.id === moment.user_id && (
+                  <Button
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined />}
+                    size="small"
+                    className="delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(moment.id);
+                    }}
+                  />
+                )}
+              </div>
             </div>
 
             <div className="item-content">

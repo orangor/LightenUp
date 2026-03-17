@@ -3,7 +3,7 @@
 // 支持多种来源的 BaseURL：localStorage > Vite/CRA 环境变量 > 默认映射
 const envBaseUrl =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
-  (typeof process !== 'undefined' && (process as any).env?.REACT_APP_API_BASE_URL) ||
+  process.env.REACT_APP_API_BASE_URL ||
   undefined
 
 const DEFAULT_BASE = {
@@ -14,7 +14,7 @@ const DEFAULT_BASE = {
 
 export function getBaseURL(): string {
   const override = (typeof window !== 'undefined' && window.localStorage.getItem('apiBase')) || undefined
-  const nodeEnv = (typeof process !== 'undefined' && process.env?.NODE_ENV) || 'development'
+  const nodeEnv = process.env.NODE_ENV || 'development'
   return override || envBaseUrl || DEFAULT_BASE[(nodeEnv as keyof typeof DEFAULT_BASE) || 'development']
 }
 
@@ -94,6 +94,7 @@ export const endpoints = {
     FEED: '/api/energy/feed',
     INTERACT: '/api/energy/interact',
     UNCLOSED: '/api/energy/unclosed',
+    TREND: '/api/energy/trend',
   },
 } as const
 

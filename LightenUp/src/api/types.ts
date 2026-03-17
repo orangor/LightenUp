@@ -74,6 +74,7 @@ export interface UploadAssetResponse {
 // 通用类型
 export interface User {
   id: number
+  username?: string
   email: string
   role?: string
   permissions?: string[]

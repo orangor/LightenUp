@@ -1,0 +1,427 @@
+@import '../../../styles/variables.scss';
+
+.energy-matrix-container {
+  /* 
+    Premium Card Style 
+    使用线性渐变替代纯色背景，模拟光照从左上角射入的效果
+    大幅降低不透明度，从 0.4 -> 0.1，彻底消除贴片感
+  */
+  background: linear-gradient(
+    145deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  backdrop-filter: blur(20px); /* 降低模糊度，让背景色透出来更多 */
+  -webkit-backdrop-filter: blur(20px);
+  
+  color: #2D3748;
+  border-radius: 32px;
+  padding: 40px;
+  margin-bottom: 32px;
+  
+  /* 
+    Glass Edge & Shadow
+    使用混合阴影模拟玻璃厚度
+    1. 顶部高光内描边 (rgba 0.5)
+    2. 底部反光 (rgba 0.2)
+    3. 柔和的投影
+  */
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  overflow: hidden;
+  position: relative;
+  border: none;
+
+  /* Header Section */
+  .matrix-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .matrix-title {
+          font-size: 13px;
+          color: #718096; /* Cool Gray */
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .week-nav {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          .nav-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0,0,0,0.03);
+            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #718096;
+            transition: all 0.2s ease;
+            padding: 0;
+
+            &:hover:not(:disabled) {
+              background: #fff;
+              color: #2D3748;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+              transform: scale(1.05);
+            }
+
+            &:active:not(:disabled) {
+              transform: scale(0.95);
+            }
+
+            &:disabled {
+              opacity: 0.3;
+              cursor: not-allowed;
+            }
+
+            svg {
+              width: 16px;
+              height: 16px;
+              stroke-width: 2.5px;
+            }
+          }
+
+          .current-week {
+            font-size: 13px;
+            color: #4A5568;
+            margin: 0 8px;
+            font-family: "SF Pro Text", sans-serif;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .avg-energy {
+        font-family: "SF Pro Display", sans-serif;
+        font-size: 56px; /* Even Larger */
+        font-weight: 700;
+        /* Gradient Text for Main Number */
+        background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        letter-spacing: -2px;
+        line-height: 1;
+
+        .unit {
+          font-size: 14px;
+          color: #A0AEC0;
+          font-weight: 500;
+          letter-spacing: 0;
+          -webkit-text-fill-color: #A0AEC0;
+        }
+      }
+    }
+
+    .header-right {
+      width: 140px;
+      height: 48px;
+      opacity: 0.9;
+      
+      .sparkline {
+        width: 100%;
+        height: 100%;
+        
+        path {
+          /* Gradient Stroke is defined in SVG defs in component usually, or solid here */
+          stroke: #7B61FF; 
+          stroke-width: 3;
+          fill: none;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          filter: drop-shadow(0 4px 6px rgba(123, 97, 255, 0.2));
+        }
+      }
+    }
+  }
+
+  /* Chart Area */
+  .matrix-chart {
+    position: relative;
+    z-index: 1;
+    margin-left: 60px;
+    margin-bottom: 40px;
+    height: 600px; 
+    
+    .grid-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+
+      .v-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: none;
+        border-right: 1px dashed rgba(0, 0, 0, 0.03); /* Lighter dash */
+        transform: translateX(-50%);
+      }
+    }
+
+    .y-axis {
+      position: absolute;
+      top: 0;
+      left: -60px;
+      width: 48px;
+      height: 100%;
+      
+      .y-label {
+        font-size: 12px;
+        color: #CBD5E0; /* Lighter gray for axis */
+        font-family: "SF Pro Text", sans-serif;
+        text-align: right;
+        width: 100%;
+        font-weight: 500;
+      }
+    }
+
+    .x-axis {
+      position: absolute;
+      bottom: -40px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      
+      .x-label {
+        font-size: 13px;
+        color: #718096;
+        text-align: center;
+        font-weight: 500;
+        font-family: "SF Pro Text", sans-serif;
+        
+        &:first-child { text-align: center; }
+        &:last-child { text-align: center; }
+      }
+    }
+
+    .bubble-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      
+      .energy-bubble {
+        position: absolute;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        z-index: 10;
+        
+        /* 
+          Jewel-like appearance 
+          2px pure white border + subtle inner shadow for volume
+        */
+        border: 2px solid #ffffff;
+        box-shadow: 
+          0 4px 10px rgba(0, 0, 0, 0.06), 
+          inset 0 -2px 4px rgba(0,0,0,0.05); /* Inner volume */
+        
+        will-change: transform;
+        transition: filter 0.2s ease;
+        
+        &:hover {
+          z-index: 20;
+          filter: brightness(1.1);
+          box-shadow: 
+            0 12px 24px rgba(0, 0, 0, 0.1), 
+            0 4px 8px rgba(0, 0, 0, 0.05),
+            0 0 0 4px rgba(255,255,255,0.4); /* Halo effect */
+        }
+      }
+    }
+  }
+}
+
+/* Tooltip Customization - Premium Glassmorphism */
+.matrix-tooltip {
+  .ant-tooltip-inner {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: saturate(180%) blur(16px) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 1) !important;
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.08), 
+      0 4px 6px rgba(0, 0, 0, 0.02) !important;
+    color: #2D3748 !important;
+    min-width: unset !important;
+  }
+  
+  .ant-tooltip-arrow {
+    display: none;
+  }
+  
+  .tooltip-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    
+    .time {
+      color: #A0AEC0;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: "SF Pro Text", sans-serif;
+    }
+    
+    .type {
+      font-weight: 600;
+      color: #4A5568;
+    }
+
+    .value {
+      font-weight: 800;
+      color: #1A202C; 
+      font-family: "SF Pro Display", sans-serif;
+    }
+  }
+}
+
+/* Mobile Adaptation */
+@media (max-width: 768px) {
+  .energy-matrix-container {
+    padding: 24px 20px;
+    margin-bottom: 20px;
+    border-radius: 24px;
+    
+    /* 
+      Mobile Optimization
+      同步 PC 端的高级渐变背景，消除死白贴片感
+      保持一致的晨曦微光通透感
+    */
+    background: linear-gradient(
+      145deg, 
+      rgba(255, 255, 255, 0.4) 0%, 
+      rgba(255, 255, 255, 0.1) 100%
+    );
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    /* 
+      Mobile Shadow
+      调整阴影参数以适应移动端屏幕
+    */
+    box-shadow: 
+      0 8px 32px 0 rgba(31, 38, 135, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    
+    .matrix-header {
+      margin-bottom: 32px;
+      flex-direction: row;
+      align-items: flex-end;
+      
+      .header-left {
+        width: 100%;
+        
+        .title-row {
+          gap: 10px;
+          justify-content: space-between;
+          width: 100%;
+          
+          .matrix-title {
+            font-size: 12px;
+          }
+          
+          .week-nav {
+            .nav-btn {
+              width: 32px;
+              height: 32px;
+              
+              svg {
+                width: 14px;
+                height: 14px;
+              }
+            }
+            
+            .current-week {
+              font-size: 12px;
+            }
+          }
+        }
+
+        .avg-energy {
+          font-size: 42px; /* Adjusted for mobile */
+          margin-top: 12px;
+          
+          .unit {
+            font-size: 13px;
+          }
+        }
+      }
+      
+      .header-right {
+        display: none;
+      }
+    }
+    
+    .matrix-chart {
+      margin-left: 40px;
+      margin-bottom: 24px;
+      height: 600px; 
+      
+      .y-axis {
+        left: -40px;
+        width: 32px;
+        
+        .y-label {
+          font-size: 11px;
+        }
+      }
+      
+      .x-axis {
+        bottom: -24px;
+        
+        .x-label {
+          font-size: 11px;
+          transform: scale(0.9);
+        }
+      }
+      
+      .bubble-container .energy-bubble {
+        &::after {
+          content: '';
+          position: absolute;
+          top: -12px;
+          left: -12px;
+          right: -12px;
+          bottom: -12px;
+        }
+      }
+    }
+  }
+}

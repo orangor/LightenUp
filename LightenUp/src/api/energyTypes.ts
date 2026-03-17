@@ -100,3 +100,16 @@ export interface CreateMomentResponse {
   id: number
   message: string
 }
+
+export interface TrendPoint {
+  moment_id?: number
+  energy_type_id?: number
+  energy_name?: string
+  level_value: number
+  created_at: string
+  count?: number
+}
+
+export interface TrendResponse {
+  points: TrendPoint[]
+}

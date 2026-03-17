@@ -1,10 +1,14 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter as Router, useLocation } from 'react-router-dom';
+import moment from 'moment';
+import 'moment/locale/zh-cn';
 import AppRoutes from './routes';
 import Chat from './components/chat/Chat';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './index.scss';
+
+moment.locale('zh-cn');
 
 // 根据路由与认证状态决定是否渲染 Chat（登录/注册页不显示）
 const RouteAwareChat: React.FC = () => {

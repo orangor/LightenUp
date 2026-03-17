@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Get, Post } from '../decorators/route.decorator'
+import { Get, Post, Delete } from '../decorators/route.decorator'
 import EnergyModel from '../models/energy.model'
 import { NotFoundError, BadRequestError } from '../utils/errors'
 
@@ -91,6 +91,22 @@ export default class EnergyController {
     return { success: true }
   }
 
+  @Delete('/api/energy/moments/:id', '删除能量动态', '删除指定ID的动态及其关联数据')
+  static async deleteMoment(req: Request, res: Response) {
+    if (!req.user) throw new Error('未授权')
+    const userId = req.user.userId
+    const momentId = Number(req.params.id)
+
+    if (!momentId) throw new BadRequestError('动态ID无效')
+
+    const success = await EnergyModel.deleteMoment(momentId, userId)
+    if (!success) {
+      throw new NotFoundError('动态不存在或无权删除')
+    }
+
+    return { success: true, message: '删除成功' }
+  }
+
   @Get('/api/energy/unclosed', '获取未闭环动态', '获取过去7天未闭环的低频动态')
   static async getUnclosedMoments(req: Request, res: Response) {
     if (!req.user) throw new Error('未授权')
@@ -98,5 +114,22 @@ export default class EnergyController {
 
     const moments = await EnergyModel.getUnclosedMoments(userId)
     return moments
+  }
+
+  @Get('/api/energy/trend', '获取能量趋势', '返回个人能量值时间序列（默认近30天，按时间升序）')
+  static async getTrend(req: Request, res: Response) {
+    if (!req.user) throw new Error('未授权')
+    const userId = req.user.userId
+    const { start_date, end_date, days, group_by, limit } = req.query as any
+
+    const result = await EnergyModel.getTrend({
+      userId,
+      startDate: start_date,
+      endDate: end_date,
+      days: days ? Number(days) : 30,
+      limit: limit ? Number(limit) : undefined,
+      groupBy: group_by as 'raw' | 'hour' | 'day',
+    })
+    return result
   }
 }

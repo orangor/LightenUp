@@ -1,28 +1,22 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Tabs, message } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Tabs, message } from 'antd';
+import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
-import './LoginPage.css';
-
-// 使用 AntD Tabs 的 items API，移除已弃用的 TabPane
+import './LoginPage.scss';
 
 const LoginPage: React.FC = () => {
   const { login, register, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
 
-  // tabItems 定义已移动至返回 JSX 之前，避免引用未定义的处理函数
-
-  // 登录表单提交
   const handleLogin = async (values: { email: string; password: string }) => {
     try {
       await login(values.email, values.password);
       message.success('登录成功');
     } catch (error) {
-      // 错误已在 AuthService 中统一处理（HttpClient 拦截器）
+      // 错误已在 AuthService 中统一处理
     }
   };
 
-  // 注册表单提交
   const handleRegister = async (values: { email: string; password: string; confirmPassword: string }) => {
     if (values.password !== values.confirmPassword) {
       message.error('两次输入的密码不一致');
@@ -32,9 +26,9 @@ const LoginPage: React.FC = () => {
     try {
       await register(values.email, values.password);
       message.success('注册成功，请查收验证邮件');
-      setActiveTab('login'); // 注册成功后切换到登录页
+      setActiveTab('login');
     } catch (error) {
-      // 错误已在 AuthService 中统一处理（HttpClient 拦截器）
+      // 错误已在 AuthService 中统一处理
     }
   };
 
@@ -48,6 +42,7 @@ const LoginPage: React.FC = () => {
           initialValues={{ remember: true }}
           onFinish={handleLogin}
           size="large"
+          layout="vertical"
         >
           <Form.Item
             name="email"
@@ -56,22 +51,23 @@ const LoginPage: React.FC = () => {
               { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
           >
-            <Input prefix={<MailOutlined />} placeholder="邮箱" />
+            <Input prefix={<MailOutlined className="site-form-item-icon" />} placeholder="请输入邮箱账号" />
           </Form.Item>
           <Form.Item
             name="password"
             rules={[{ required: true, message: '请输入密码' }]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+            <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} placeholder="请输入登录密码" />
           </Form.Item>
           <Form.Item>
             <Button
               type="primary"
               htmlType="submit"
-              className="login-button"
+              className="submit-button"
               loading={isLoading}
+              block
             >
-              登录
+              立即登录
             </Button>
           </Form.Item>
         </Form>
@@ -81,7 +77,12 @@ const LoginPage: React.FC = () => {
       key: 'register',
       label: '注册',
       children: (
-        <Form name="register" onFinish={handleRegister} size="large">
+        <Form 
+          name="register" 
+          onFinish={handleRegister} 
+          size="large"
+          layout="vertical"
+        >
           <Form.Item
             name="email"
             rules={[
@@ -89,7 +90,7 @@ const LoginPage: React.FC = () => {
               { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
           >
-            <Input prefix={<MailOutlined />} placeholder="邮箱" />
+            <Input prefix={<MailOutlined className="site-form-item-icon" />} placeholder="请输入邮箱账号" />
           </Form.Item>
           <Form.Item
             name="password"
@@ -98,7 +99,7 @@ const LoginPage: React.FC = () => {
               { min: 8, message: '密码长度不能少于8个字符' },
             ]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+            <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} placeholder="设置登录密码" />
           </Form.Item>
           <Form.Item
             name="confirmPassword"
@@ -114,16 +115,17 @@ const LoginPage: React.FC = () => {
               }),
             ]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="确认密码" />
+            <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} placeholder="确认登录密码" />
           </Form.Item>
           <Form.Item>
             <Button
               type="primary"
               htmlType="submit"
-              className="login-button"
+              className="submit-button"
               loading={isLoading}
+              block
             >
-              注册
+              注册账号
             </Button>
           </Form.Item>
         </Form>
@@ -132,10 +134,29 @@ const LoginPage: React.FC = () => {
   ];
 
   return (
-    <div className="login-container">
-      <Card className="login-card" title="DayDo 任务管理系统">
-        <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
-      </Card>
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-header">
+          <div className="logo-container">
+            <span className="logo-icon">🌀</span>
+          </div>
+          <h1 className="app-title">LightenUp & 执行清单</h1>
+          <p className="app-subtitle">让每一天都充满能量与效率</p>
+        </div>
+        
+        <div className="login-card">
+          <Tabs 
+            activeKey={activeTab} 
+            onChange={setActiveTab} 
+            items={tabItems} 
+            centered
+          />
+        </div>
+
+        <div className="login-footer">
+          © {new Date().getFullYear()} LightenUp. All rights reserved.
+        </div>
+      </div>
     </div>
   );
 };

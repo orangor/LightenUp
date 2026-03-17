@@ -47,7 +47,8 @@ router.post('/assets/upload', upload.single('file'), async (req, res) => {
   if (!ext) throw new ValidationError('无法识别文件后缀')
 
   const relPath = path.posix.join('images', yyyy, mm, `${assetId}${ext}`)
-  const diskDir = path.join(process.cwd(), 'uploads', 'assets', 'images', yyyy, mm)
+  // 使用 __dirname 确保在开发(src/routes)和生产(dist/routes)环境中都能正确找到项目根目录下的 uploads
+  const diskDir = path.join(__dirname, '../../uploads', 'assets', 'images', yyyy, mm)
   const diskPath = path.join(diskDir, `${assetId}${ext}`)
 
   fs.mkdirSync(diskDir, { recursive: true })

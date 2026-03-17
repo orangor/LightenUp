@@ -8,6 +8,7 @@ import {
   GetFeedResponse,
   InteractRequest,
   EnergyMoment,
+  TrendResponse,
 } from './energyTypes'
 
 export const EnergyService = {
@@ -25,4 +26,17 @@ export const EnergyService = {
 
   // 获取未闭环动态
   getUnclosedMoments: () => client.get<EnergyMoment[]>(endpoints.ENERGY.UNCLOSED),
+
+  // 获取个人趋势
+  getTrend: (params?: {
+    start_date?: string
+    end_date?: string
+    days?: number
+    limit?: number
+    group_by?: 'raw' | 'hour' | 'day'
+  }) => client.get<TrendResponse>(endpoints.ENERGY.TREND, params),
+
+  // 删除动态
+  deleteMoment: (momentId: number) =>
+    client.delete<{ success: boolean; message: string }>(`${endpoints.ENERGY.MOMENTS}/${momentId}`),
 }

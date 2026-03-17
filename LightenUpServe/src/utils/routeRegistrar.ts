@@ -18,7 +18,7 @@ export class RouteRegistrar {
     console.log('🚀 开始注册装饰器路由...')
 
     files.forEach((file) => {
-      if (file.endsWith('.controller.ts')) {
+      if (file.endsWith('.controller.ts') || file.endsWith('.controller.js')) {
         const controllerPath = path.join(controllersPath, file)
 
         try {

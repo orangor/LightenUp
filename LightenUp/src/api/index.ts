@@ -44,25 +44,3 @@ export default {
   StreamService,
   EnergyService,
 }
-
-/**
- * 使用示例：
- *
- * // 命名导入（推荐）
- * import { AuthService, SeedService, StreamService, endpoints, createEndpoint } from '@/api'
- * const loginRes = await AuthService.login(email, password)
- * const card = await SeedService.fetchCard({ ... })
- * const stream$ = StreamService.chatStream(messages)
- *
- * // 快速新增接口：
- * // 1) 在 apiEndpoints.ts 中添加路径，如 endpoints.SEED.MY_NEW_API
- * // 2) 直接使用工厂函数：
- * const myApi = createEndpoint<any, any>(endpoints.SEED.GET_DATA, 'POST')
- * const data = await myApi({ param: ... })
- *
- * // 或默认导出聚合对象（向后兼容）
- * import api from '@/api'
- * await api.AuthService.login(email, password)
- * await api.client.post(endpoints.SEED.ADD_CARD, { param: ... })
- * api.StreamService.chatStream(messages)
- */

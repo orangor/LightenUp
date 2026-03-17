@@ -62,7 +62,7 @@ export const sendEmail = (to: string, subject: string, html: string): Promise<vo
 }
 
 export const sendVerificationEmail = async (to: string, token: string): Promise<void> => {
-  const baseUrl = process.env.APP_URL || 'http://localhost:8000'
+  const baseUrl = process.env.APP_URL || 'http://moxae.com'
   const verificationUrl = `${baseUrl}/verify-email?token=${token}`
   const html = `
     <h1>验证您的邮箱</h1>
@@ -74,7 +74,7 @@ export const sendVerificationEmail = async (to: string, token: string): Promise<
 }
 
 export const sendPasswordResetEmail = async (to: string, token: string): Promise<void> => {
-  const baseUrl = process.env.APP_URL || 'http://localhost:8000'
+  const baseUrl = process.env.APP_URL || 'http://moxae.com'
   const resetUrl = `${baseUrl}/reset-password?token=${token}`
   const html = `
     <h1>重置密码</h1>
