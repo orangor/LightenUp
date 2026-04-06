@@ -1,5 +1,16 @@
 @import '../../styles/variables';
 
+.media-uploader {
+  width: 100%;
+
+  &.drag-active {
+    .upload-btn {
+      border-color: #7B61FF;
+      background-color: rgba(123, 97, 255, 0.08);
+    }
+  }
+}
+
 .media-uploader-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -72,11 +83,47 @@
     margin-top: 0.25rem;
   }
 
+  .upload-hint {
+    font-size: 0.6875rem;
+    color: $gray-500;
+    margin-top: 0.2rem;
+  }
+
+  &.is-drag-active {
+    border-color: #7B61FF;
+    background-color: rgba(123, 97, 255, 0.08);
+
+    .upload-icon,
+    .upload-text,
+    .upload-hint {
+      color: #7B61FF;
+    }
+  }
 }
 
 .upload-input {
   display: none !important;
 }
+
+.desktop-camera-btn {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 0.75rem;
+  color: #5A67D8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+  }
+}
+
 .action-sheet-overlay {
   position: fixed;
   inset: 0;

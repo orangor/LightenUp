@@ -90,9 +90,9 @@ export class HttpClient {
       (response) => response,
       async (error) => {
         const status: number | undefined = error.response?.status
-        const msg = error.response?.data?.msg
+        const backendMsg = error.response?.data?.message || error.response?.data?.msg
 
-        if (msg === 'Token已过期' || status === 401 || status === 403) {
+        if (backendMsg === 'Token已过期' || status === 401 || status === 403) {
           // 尝试刷新token并重试一次
           const newToken = await refreshToken()
           if (newToken) {
@@ -106,10 +106,10 @@ export class HttpClient {
           return Promise.reject(error)
         }
 
-        const errText = ERROR_MESSAGES[status || 500] || '未知错误'
+        const errText = backendMsg || ERROR_MESSAGES[status || 500] || '未知错误'
         message.error(errText)
         return Promise.reject(error)
-      }
+      },
     )
   }
 

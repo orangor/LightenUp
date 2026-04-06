@@ -62,24 +62,41 @@ class UserModel {
   }
 
   static async createVerificationToken(userId: number): Promise<string> {
-    const token = jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '24h' })
+    const token = jwt.sign({ userId }, process.env.JWT_SECRET!, { expiresIn: '7d' })
     await db.execute('UPDATE users SET verification_token = ? WHERE id = ?', [token, userId])
     return token
   }
 
   static async verifyEmail(token: string): Promise<void> {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number }
-    await db.execute('UPDATE users SET email_verified = true, verification_token = NULL WHERE id = ?', [decoded.userId])
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: number }
+
+      console.log(`正在验证用户邮箱，用户ID: ${decoded.userId}`)
+
+      const [result] = await db.execute<ResultSetHeader>(
+        'UPDATE users SET email_verified = 1, verification_token = NULL WHERE id = ?',
+        [decoded.userId],
+      )
+
+      console.log(`数据库更新结果: affectedRows = ${result.affectedRows}`)
+
+      if (result.affectedRows === 0) {
+        throw new Error('未找到该用户或已验证')
+      }
+    } catch (error) {
+      console.error('验证邮箱失败:', error)
+      throw error
+    }
   }
 
   static async createPasswordResetToken(email: string): Promise<string | null> {
     const [rows] = await db.execute<RowDataPacket[]>('SELECT id FROM users WHERE email = ?', [email])
     if (!rows[0]) return null
 
-    const token = jwt.sign({ userId: rows[0].id }, process.env.JWT_SECRET!, { expiresIn: '1h' })
+    const token = jwt.sign({ userId: rows[0].id }, process.env.JWT_SECRET!, { expiresIn: '24h' })
     await db.execute('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?', [
       token,
-      new Date(Date.now() + 3600000),
+      new Date(Date.now() + 24 * 60 * 60 * 1000),
       rows[0].id,
     ])
     return token

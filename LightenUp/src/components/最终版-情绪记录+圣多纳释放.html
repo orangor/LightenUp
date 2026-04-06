@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情绪日记 · 圣多纳释放</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #faf7f2;
+  --surface: #f3ede4;
+  --border: #e0d6c8;
+  --text: #3d3530;
+  --text-muted: #9a8f86;
+  --ink: #2a1f1a;
+  --accent: #c4834a;
+  --accent-soft: #d4a574;
+  --green: #6a9e6e;
+  --radius: 16px;
+
+  --apathy:     #a0a0a0;
+  --grief:      #7ea3c1;
+  --fear:       #b47ec6;
+  --lust:       #e8925a;
+  --anger:      #e07b6b;
+  --pride:      #c9a832;
+  --courage:    #7bc67e;
+  --acceptance: #5bb8a8;
+  --peace:      #7ab8d4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Serif SC', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── HEADER ── */
+header {
+  width: 100%;
+  max-width: 500px;
+  padding: 32px 24px 0;
+}
+.app-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-style: italic;
+  color: var(--ink);
+}
+.app-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── NAV ── */
+nav {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px 24px 0;
+  display: flex;
+  gap: 5px;
+}
+.nav-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  border-radius: 100px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-btn.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #faf7f2;
+}
+
+/* ── MAIN ── */
+main {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px 24px 80px;
+  flex: 1;
+}
+.tab { display: none; animation: fadeUp 0.3s ease; }
+.tab.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION LABELS ── */
+.section-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  margin-top: 24px;
+}
+
+/* ── MOOD GRID ── */
+.sedona-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  margin-top: 4px;
+}
+.sedona-scale {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.scale-arrow {
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(to right, var(--apathy), var(--peace));
+  position: relative;
+}
+.scale-arrow::after {
+  content: '';
+  position: absolute;
+  right: 0; top: -3px;
+  border-left: 5px solid var(--peace);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 13px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+.mood-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.18s;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--mc);
+}
+.mood-card:hover::before { opacity: 0.1; }
+.mood-card.selected::before { opacity: 0.18; }
+.mood-card.selected {
+  border-color: var(--mc);
+  background: color-mix(in srgb, var(--mc) 12%, var(--surface));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+.mood-card[data-mood="apathy"]     { --mc: var(--apathy); }
+.mood-card[data-mood="grief"]      { --mc: var(--grief); }
+.mood-card[data-mood="fear"]       { --mc: var(--fear); }
+.mood-card[data-mood="lust"]       { --mc: var(--lust); }
+.mood-card[data-mood="anger"]      { --mc: var(--anger); }
+.mood-card[data-mood="pride"]      { --mc: var(--pride); }
+.mood-card[data-mood="courage"]    { --mc: var(--courage); }
+.mood-card[data-mood="acceptance"] { --mc: var(--acceptance); }
+.mood-card[data-mood="peace"]      { --mc: var(--peace); }
+.mood-emoji  { font-size: 26px; line-height: 1; position: relative; z-index: 1; }
+.mood-label  { font-size: 11px; color: var(--text); font-weight: 600; position: relative; z-index: 1; }
+.mood-sub    { font-size: 9px; color: var(--text-muted); position: relative; z-index: 1; letter-spacing: 0.5px; }
+.mood-level  {
+  position: absolute; top: 6px; right: 8px;
+  font-size: 9px; color: var(--text-muted);
+  font-family: 'Playfair Display', serif; font-style: italic; z-index: 1;
+}
+
+/* ── INTENSITY ── */
+.intensity-row { display: flex; align-items: center; gap: 12px; }
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--val, 50%), var(--border) var(--val, 50%));
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid var(--bg);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+}
+.intensity-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--ink);
+  min-width: 28px; text-align: right;
+}
+
+/* ── TAGS ── */
+.tag-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+.tag-btn {
+  padding: 5px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tag-btn.selected {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* ── NOTE ── */
+textarea {
+  width: 100%;
+  padding: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: var(--text);
+  resize: none;
+  height: 88px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--text-muted); }
+
+/* ── SUBMIT ── */
+.submit-btn {
+  width: 100%;
+  margin-top: 28px;
+  padding: 16px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(42,31,26,0.18); }
+
+/* ── POST-LOG RELEASE PROMPT ── */
+#post-log-prompt { display: none; margin-top: 4px; }
+.post-log-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  animation: fadeUp 0.35s ease;
+  box-shadow: 0 4px 24px rgba(42,31,26,0.08);
+}
+.post-log-check {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), #5bb89a);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+.post-log-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.post-log-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.post-log-meta-mood {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.post-log-meta-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.post-log-meta-badge {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 9px;
+}
+.post-log-note-preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.5;
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+}
+.post-log-cta {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  margin-top: 16px;
+}
+.post-log-cta em { color: var(--accent); font-style: italic; }
+.post-log-btn-row { display: flex; gap: 10px; }
+.post-log-btn-release {
+  flex: 2;
+  padding: 14px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.post-log-btn-release:hover { background: #a86b35; transform: translateY(-1px); }
+.post-log-btn-skip {
+  flex: 1;
+  padding: 14px;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.post-log-btn-skip:hover { border-color: var(--text-muted); color: var(--text); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: 13px;
+  transition: transform 0.3s ease;
+  z-index: 999;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── HISTORY TAB ── */
+.history-controls {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px; margin-top: 4px;
+}
+.history-count { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+.export-btn {
+  padding: 6px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.export-btn:hover { border-color: var(--ink); color: var(--ink); }
+.history-empty {
+  text-align: center; padding: 60px 0;
+  color: var(--text-muted); font-size: 14px;
+}
+.history-empty .empty-icon { font-size: 40px; display: block; margin-bottom: 12px; opacity: 0.5; }
+.day-group { margin-bottom: 20px; }
+.day-label {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.day-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.history-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.history-card:hover { border-color: var(--text-muted); }
+.history-card-top {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+}
+.history-mood-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.history-mood-name { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+.history-time { font-size: 11px; color: var(--text-muted); font-family: 'Playfair Display', serif; font-style: italic; }
+.history-intensity { font-size: 11px; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+.history-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.history-tag { font-size: 10px; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 1px 8px; }
+.history-note { font-size: 12px; color: var(--text); line-height: 1.7; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 6px; }
+.delete-btn {
+  position: absolute; top: 10px; right: 12px;
+  width: 22px; height: 22px;
+  border: none; background: transparent; color: var(--text-muted);
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+.history-card:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { background: #e07b6b22; color: #e07b6b; }
+
+/* ── HISTORY CARD BOTTOM ROW (release) ── */
+.history-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.release-badge-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.release-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px;
+  color: var(--green);
+  background: #6a9e6e18;
+  border: 1px solid #6a9e6e33;
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+.release-entry-btn {
+  padding: 5px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.release-entry-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #c4834a0f;
+}
+
+/* ── CALENDAR ── */
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-month { font-family: 'Playfair Display', serif; font-size: 22px; font-style: italic; }
+.cal-nav { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px 8px; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; text-align: center; font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.cal-day { aspect-ratio: 1; border-radius: 10px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: var(--text-muted); position: relative; cursor: default; transition: transform 0.12s; }
+.cal-day.has-entry { cursor: pointer; }
+.cal-day.has-entry:hover { transform: scale(1.08); }
+.cal-day.empty { background: transparent; }
+.cal-day.today { border: 1.5px solid var(--accent); color: var(--accent); font-weight: 600; }
+.cal-dots { display: flex; gap: 2px; margin-top: 3px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── CHARTS ── */
+.chart-wrap { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-top: 8px; }
+.chart-title { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 16px; color: var(--ink); }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 16px 12px; text-align: center; }
+.stat-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--ink); }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; letter-spacing: 1px; }
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+.no-data { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 13px; }
+
+/* ── INSIGHT TAB ── */
+.sedona-banner {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--peace) 15%, var(--surface)), var(--surface));
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.sedona-banner strong { color: var(--ink); font-size: 12px; }
+.insight-analyze-btn {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, #2a1f1a, #4a3530);
+  color: #faf7f2;
+  border: none; border-radius: var(--radius);
+  font-family: 'Noto Serif SC', serif; font-size: 14px;
+  cursor: pointer; letter-spacing: 1px;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 24px;
+}
+.insight-analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(42,31,26,0.22); }
+.insight-analyze-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.insight-section { margin-bottom: 24px; }
+.insight-section-title { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--ink); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.trigger-bar-item { margin-bottom: 12px; }
+.trigger-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.trigger-bar-name { font-size: 13px; color: var(--text); }
+.trigger-bar-stats { font-size: 11px; color: var(--text-muted); font-family: 'Playfair Display', serif; font-style: italic; }
+.trigger-bar-track { height: 6px; border-radius: 6px; background: var(--border); overflow: hidden; }
+.trigger-bar-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; }
+.trigger-bar-fill.negative { background: #e07b6b; }
+.trigger-bar-fill.mixed    { background: #c9a832; }
+.trigger-bar-fill.positive { background: #7bc67e; }
+.ai-result-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; animation: fadeUp 0.4s ease; }
+.thought-pattern { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.thought-pattern:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.thought-pattern-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.thought-freq-badge { flex-shrink: 0; background: #e07b6b22; color: #e07b6b; border: 1px solid #e07b6b44; border-radius: 20px; padding: 2px 9px; font-size: 10px; letter-spacing: 0.5px; margin-top: 2px; }
+.thought-pattern-text { font-size: 13px; color: var(--ink); font-weight: 600; line-height: 1.5; }
+.thought-pattern-desc { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+.reframe-hint { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; background: #7bc67e18; border: 1px solid #7bc67e44; border-radius: 10px; padding: 9px 12px; font-size: 11px; color: #3a6b40; line-height: 1.6; }
+.reframe-hint .reframe-icon { flex-shrink: 0; font-size: 13px; }
+.insight-note-count { font-size: 11px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+.insight-empty { text-align: center; padding: 50px 0; color: var(--text-muted); font-size: 13px; line-height: 2; }
+.loading-dots { display: inline-flex; gap: 4px; align-items: center; }
+.loading-dots span { width: 5px; height: 5px; border-radius: 50%; background: #faf7f2; animation: dot-bounce 1.2s infinite; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot-bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+/* ════════════════════════════════════════
+   SEDONA BOTTOM SHEET
+   ════════════════════════════════════════ */
+.sedona-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+.sedona-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(42,31,26,0);
+  transition: background 0.4s ease;
+}
+.sedona-panel {
+  position: relative;
+  z-index: 1;
+  background: #faf7f2;
+  border-radius: 24px 24px 0 0;
+  max-height: 91vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -8px 40px rgba(42,31,26,0.18);
+  overscroll-behavior: contain;
+}
+.sedona-sheet.open {
+  pointer-events: all;
+}
+.sedona-sheet.open .sedona-backdrop {
+  background: rgba(42,31,26,0.45);
+}
+.sedona-sheet.open .sedona-panel {
+  transform: translateY(0);
+}
+
+.sedona-handle-bar {
+  display: flex;
+  justify-content: center;
+  padding: 14px 0 0;
+}
+.sedona-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.sedona-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 0;
+}
+.sedona-sheet-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-style: italic;
+  color: var(--ink);
+}
+.sedona-close-btn {
+  width: 28px; height: 28px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.sedona-close-btn:hover { border-color: var(--text); color: var(--text); }
+
+/* Entry context strip */
+.sedona-entry-context {
+  margin: 12px 20px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: 12px;
+  border-left: 3px solid var(--accent-soft);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.sedona-entry-context .ctx-emoji { font-size: 16px; }
+.sedona-entry-context .ctx-mood { font-weight: 600; color: var(--ink); }
+.sedona-entry-context .ctx-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  flex-basis: 100%;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* Sedona content area */
+.sedona-content {
+  padding: 8px 20px 40px;
+}
+
+/* Sedona step card */
+.s-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-shadow: 0 2px 20px rgba(46,37,32,0.06), 0 1px 4px rgba(46,37,32,0.03);
+  animation: fadeUp 0.3s ease;
+}
+
+/* Sedona step indicator */
+.s-dots {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.s-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s ease;
+}
+.s-dot.active { background: var(--accent); width: 18px; border-radius: 3px; }
+.s-dot.done   { background: var(--green); }
+
+.s-label {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.s-question {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 20px;
+  font-weight: 300;
+}
+.s-question em { font-style: italic; color: var(--accent); }
+.s-hint {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  border-left: 3px solid var(--accent-soft);
+}
+.s-input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: var(--text);
+  background: white;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  height: auto;
+  min-height: 72px;
+}
+.s-input:focus { border-color: var(--accent-soft); }
+.s-input::placeholder { color: var(--text-muted); font-weight: 300; }
+.s-btn-row { display: flex; gap: 10px; margin-top: 16px; }
+.s-btn-primary {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  background: var(--accent);
+  color: white;
+  transition: all 0.2s;
+}
+.s-btn-primary:hover { background: #a86b35; transform: translateY(-1px); }
+.s-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.s-btn-secondary {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.2s;
+}
+.s-btn-secondary:hover { border-color: var(--accent-soft); }
+
+/* yes/no choice */
+.s-choice-row { display: flex; gap: 12px; margin-top: 12px; }
+.s-choice {
+  flex: 1;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  color: var(--text);
+  transition: all 0.2s;
+  text-align: center;
+}
+.s-choice:hover { border-color: var(--accent-soft); background: var(--surface); }
+.s-choice.yes:hover, .s-choice.yes.selected { border-color: var(--green); background: #f0f8f0; color: var(--green); }
+.s-choice.no:hover, .s-choice.no.selected { border-color: var(--accent); background: #fdf5ee; color: var(--accent); }
+
+/* root cards */
+.s-root-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.s-root-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.s-root-card:hover { border-color: var(--accent-soft); background: var(--surface); }
+.s-root-card.selected { border-color: var(--accent); background: #fdf5ee; }
+.s-root-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.s-root-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* emotion tag */
+.s-emotion-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px; font-weight: 600;
+  margin-bottom: 16px;
+}
+.s-root-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+  background: #fdf5ee;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  margin-bottom: 14px;
+}
+
+/* completion */
+.s-completion {
+  text-align: center;
+  padding: 16px 8px 8px;
+}
+.s-completion-icon {
+  font-size: 44px;
+  margin-bottom: 16px;
+  animation: bloom 0.6s ease;
+}
+@keyframes bloom { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.s-completion-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.s-completion-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.9;
+  margin-bottom: 24px;
+}
+.s-completion-desc em { color: var(--accent); font-style: italic; }
+
+/* s-loading */
+.s-loading-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+.s-loading-dots span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: dot-bounce 1.2s infinite;
+}
+.s-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.s-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+.s-note-append {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  border-left: 3px solid var(--accent-soft);
+  animation: fadeUp 0.3s ease;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-name">情绪日记</div>
+  <div class="app-sub">Mood Journal · Sedona Release</div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="switchTab('log', this)">记录</button>
+  <button class="nav-btn" onclick="switchTab('history', this)">历史</button>
+  <button class="nav-btn" onclick="switchTab('insight', this)">洞察</button>
+  <button class="nav-btn" onclick="switchTab('trend', this)">趋势</button>
+  <button class="nav-btn" onclick="switchTab('dist', this)">分布</button>
+</nav>
+
+<main>
+
+  <!-- ─── LOG TAB ─── -->
+  <div class="tab active" id="tab-log">
+    <div class="sedona-banner">
+      <strong>圣多纳情绪层级</strong> — 从 万念俱灰 到 平静，自下而上代表能量提升。<br>选择此刻你真实感受到的情绪，记录后可直接做圣多纳释放。
+    </div>
+
+    <!-- Log Form -->
+    <div id="log-form">
+      <div class="section-label" style="margin-top:4px">此刻，你感觉如何？</div>
+      <div class="sedona-header">
+        <span class="sedona-scale">低能量</span>
+        <div class="scale-arrow"></div>
+        <span class="sedona-scale">高能量</span>
+      </div>
+      <div class="mood-grid">
+        <div class="mood-card" data-mood="apathy"     onclick="selectMood(this)">
+          <span class="mood-level">1</span><span class="mood-emoji">😶</span>
+          <span class="mood-label">万念俱灰</span><span class="mood-sub">Apathy</span>
+        </div>
+        <div class="mood-card" data-mood="grief"      onclick="selectMood(this)">
+          <span class="mood-level">2</span><span class="mood-emoji">😢</span>
+          <span class="mood-label">悲苦</span><span class="mood-sub">Grief</span>
+        </div>
+        <div class="mood-card" data-mood="fear"       onclick="selectMood(this)">
+          <span class="mood-level">3</span><span class="mood-emoji">😨</span>
+          <span class="mood-label">恐惧</span><span class="mood-sub">Fear</span>
+        </div>
+        <div class="mood-card" data-mood="lust"       onclick="selectMood(this)">
+          <span class="mood-level">4</span><span class="mood-emoji">😤</span>
+          <span class="mood-label">贪求</span><span class="mood-sub">Lust</span>
+        </div>
+        <div class="mood-card" data-mood="anger"      onclick="selectMood(this)">
+          <span class="mood-level">5</span><span class="mood-emoji">😠</span>
+          <span class="mood-label">愤怒</span><span class="mood-sub">Anger</span>
+        </div>
+        <div class="mood-card" data-mood="pride"      onclick="selectMood(this)">
+          <span class="mood-level">6</span><span class="mood-emoji">😏</span>
+          <span class="mood-label">自尊自傲</span><span class="mood-sub">Pride</span>
+        </div>
+        <div class="mood-card" data-mood="courage"    onclick="selectMood(this)">
+          <span class="mood-level">7</span><span class="mood-emoji">✨</span>
+          <span class="mood-label">无畏</span><span class="mood-sub">Courageousness</span>
+        </div>
+        <div class="mood-card" data-mood="acceptance" onclick="selectMood(this)">
+          <span class="mood-level">8</span><span class="mood-emoji">🌿</span>
+          <span class="mood-label">接纳</span><span class="mood-sub">Acceptance</span>
+        </div>
+        <div class="mood-card" data-mood="peace"      onclick="selectMood(this)">
+          <span class="mood-level">9</span><span class="mood-emoji">🌊</span>
+          <span class="mood-label">平静</span><span class="mood-sub">Peace</span>
+        </div>
+      </div>
+
+      <div class="section-label">强度</div>
+      <div class="intensity-row">
+        <input type="range" id="intensity" min="1" max="10" value="5" oninput="updateIntensity(this)">
+        <div class="intensity-val" id="intensity-val">5</div>
+      </div>
+
+      <div class="section-label">触发因素 <span style="font-size:10px;color:var(--text-muted)">(可多选)</span></div>
+      <div class="tag-grid" id="tag-grid">
+        <button class="tag-btn" onclick="toggleTag(this)">工作</button>
+        <button class="tag-btn" onclick="toggleTag(this)">人际</button>
+        <button class="tag-btn" onclick="toggleTag(this)">论文</button>
+        <button class="tag-btn" onclick="toggleTag(this)">求职</button>
+        <button class="tag-btn" onclick="toggleTag(this)">身体</button>
+        <button class="tag-btn" onclick="toggleTag(this)">睡眠</button>
+        <button class="tag-btn" onclick="toggleTag(this)">天气</button>
+        <button class="tag-btn" onclick="toggleTag(this)">饮食</button>
+        <button class="tag-btn" onclick="toggleTag(this)">运动</button>
+        <button class="tag-btn" onclick="toggleTag(this)">学习</button>
+        <button class="tag-btn" onclick="toggleTag(this)">创作</button>
+        <button class="tag-btn" onclick="toggleTag(this)">内省</button>
+      </div>
+
+      <div class="section-label">备注</div>
+      <textarea id="note" placeholder="此刻在想什么？哪怕几个字也好…"></textarea>
+
+      <button class="submit-btn" onclick="logMood()">记录此刻</button>
+    </div>
+
+    <!-- Post-log release prompt (hidden until mood is logged) -->
+    <div id="post-log-prompt">
+      <div class="post-log-card">
+        <div class="post-log-check">✓</div>
+        <div class="post-log-title">情绪已记录</div>
+        <div class="post-log-meta" id="post-log-meta"></div>
+        <div id="post-log-note-preview"></div>
+        <div class="post-log-cta">
+          想对这份<em>情绪</em>做一次圣多纳释放吗？
+        </div>
+        <div class="post-log-btn-row">
+          <button class="post-log-btn-release" onclick="startReleaseFromPrompt()">🌿 开始释放</button>
+          <button class="post-log-btn-skip" onclick="dismissReleasePrompt()">稍后</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── HISTORY TAB ─── -->
+  <div class="tab" id="tab-history">
+    <div class="history-controls">
+      <div class="history-count" id="history-count">共 0 条记录</div>
+      <label class="export-btn" style="cursor:pointer">导入 JSON<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+      <button class="export-btn" onclick="exportData()">导出</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- ─── INSIGHT TAB ─── -->
+  <div class="tab" id="tab-insight">
+    <div id="insight-content"></div>
+  </div>
+
+  <!-- ─── TREND TAB ─── -->
+  <div class="tab" id="tab-trend">
+    <div class="stats-row" id="stats-row"></div>
+    <div class="divider"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">情绪能量走势</div>
+      <canvas id="trend-chart" height="180"></canvas>
+    </div>
+  </div>
+
+  <!-- ─── DIST TAB ─── -->
+  <div class="tab" id="tab-dist">
+    <div class="chart-wrap">
+      <div class="chart-title">情绪分布</div>
+      <canvas id="pie-chart" height="240"></canvas>
+    </div>
+    <div class="divider"></div>
+    <div class="chart-wrap" id="tag-chart-wrap" style="display:none">
+      <div class="chart-title">触发因素</div>
+      <canvas id="tag-chart" height="200"></canvas>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ SEDONA BOTTOM SHEET ═══ -->
+<div id="sedona-sheet" class="sedona-sheet">
+  <div class="sedona-backdrop" onclick="closeSedonaSheet()"></div>
+  <div class="sedona-panel">
+    <div class="sedona-handle-bar"><div class="sedona-handle"></div></div>
+    <div class="sedona-sheet-header">
+      <div class="sedona-sheet-title">圣多纳释放 <span style="color:var(--accent)">Release</span></div>
+      <button class="sedona-close-btn" onclick="closeSedonaSheet()">✕</button>
+    </div>
+    <div id="sedona-context-bar"></div>
+    <div class="sedona-content">
+      <div id="sedona-app"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  MOOD DATA
+// ═══════════════════════════════════════════
+const MOODS = {
+  apathy:     { label: '万念俱灰', emoji: '😶', color: '#a0a0a0', energy: 1 },
+  grief:      { label: '悲苦',    emoji: '😢', color: '#7ea3c1', energy: 2 },
+  fear:       { label: '恐惧',    emoji: '😨', color: '#b47ec6', energy: 3 },
+  lust:       { label: '贪求',    emoji: '😤', color: '#e8925a', energy: 4 },
+  anger:      { label: '愤怒',    emoji: '😠', color: '#e07b6b', energy: 5 },
+  pride:      { label: '自尊自傲', emoji: '😏', color: '#c9a832', energy: 6 },
+  courage:    { label: '无畏',    emoji: '✨', color: '#7bc67e', energy: 7 },
+  acceptance: { label: '接纳',    emoji: '🌿', color: '#5bb8a8', energy: 8 },
+  peace:      { label: '平静',    emoji: '🌊', color: '#7ab8d4', energy: 9 },
+};
+const MOOD_KEYS = Object.keys(MOODS);
+const STORAGE_KEY = 'mood_journal_entries_v2';
+
+// ═══════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════
+let entries = [
+  { id:'1773584441539', timestamp:'2026-03-15T14:20:41.539Z', mood:'pride',    intensity:5, tags:['工作','创作'], note:'我好厉害，嘿嘿，我咋这么牛能，我想要被认同', releases:[] },
+  { id:'1773574025794', timestamp:'2026-03-15T11:27:05.794Z', mood:'pride',    intensity:6, tags:['工作'],        note:'老子能想到这么多创业ideal真牛逼', releases:[] },
+  { id:'1773573983613', timestamp:'2026-03-15T11:26:23.613Z', mood:'peace',    intensity:5, tags:[],              note:'everything', releases:[] },
+  { id:'1773468447563', timestamp:'2026-03-14T06:07:27.563Z', mood:'courage',  intensity:5, tags:['内省'],        note:'我意识到摆烂的深层原因是为了反击控制感，根源是童年创伤。今天哭了，释放了，落在无畏。我真是个了不起的人', releases:[] },
+  { id:'1773467591805', timestamp:'2026-03-14T05:53:11.805Z', mood:'grief',    intensity:7, tags:['工作','人际'],  note:'创业，为什么我做了这么多，大家都不重视这个项目，那我牺牲论文时间做这个干嘛，我像一个小丑一样', releases:[] },
+];
+
+async function initStorage() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    if (result && result.value) {
+      const loaded = JSON.parse(result.value);
+      // Ensure all entries have releases array
+      entries = loaded.map(e => ({ releases: [], ...e }));
+      renderAll();
+    }
+  } catch(e) {}
+}
+
+async function saveEntries() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(entries));
+  } catch(e) {}
+}
+
+function renderAll() { renderHistory(); }
+
+// ═══════════════════════════════════════════
+//  JOURNAL — LOG
+// ═══════════════════════════════════════════
+let selectedMood = null;
+let lastLoggedEntryId = null;
+let calYear, calMonth;
+let trendChart = null, pieChart = null, tagChart = null;
+
+(function init() {
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  updateIntensityGradient(document.getElementById('intensity'));
+  initStorage();
+}());
+
+function selectMood(el) {
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMood = el.dataset.mood;
+}
+function toggleTag(el) { el.classList.toggle('selected'); }
+function updateIntensity(el) {
+  document.getElementById('intensity-val').textContent = el.value;
+  updateIntensityGradient(el);
+}
+function updateIntensityGradient(el) {
+  const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.setProperty('--val', pct + '%');
+}
+
+function logMood() {
+  if (!selectedMood) { showToast('请先选择情绪 😊'); return; }
+  const intensity = +document.getElementById('intensity').value;
+  const note = document.getElementById('note').value.trim();
+  const tags = [...document.querySelectorAll('.tag-btn.selected')].map(t => t.textContent);
+  const entry = {
+    id: Date.now().toString(),
+    timestamp: new Date().toISOString(),
+    mood: selectedMood,
+    intensity,
+    tags,
+    note,
+    releases: [],
+  };
+  entries.unshift(entry);
+  saveEntries();
+  lastLoggedEntryId = entry.id;
+
+  // Show post-log release prompt
+  showPostLogPrompt(entry);
+
+  // Reset form
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.tag-btn').forEach(t => t.classList.remove('selected'));
+  document.getElementById('note').value = '';
+  document.getElementById('intensity').value = 5;
+  updateIntensityGradient(document.getElementById('intensity'));
+  document.getElementById('intensity-val').textContent = '5';
+  selectedMood = null;
+}
+
+function showPostLogPrompt(entry) {
+  const m = MOODS[entry.mood];
+  // Build meta
+  document.getElementById('post-log-meta').innerHTML = `
+    <div class="post-log-meta-mood">
+      <div class="post-log-meta-dot" style="background:${m.color}"></div>
+      ${m.emoji} ${m.label}
+    </div>
+    <span class="post-log-meta-badge">强度 ${entry.intensity}</span>
+    ${entry.tags.map(t => `<span class="post-log-meta-badge">${t}</span>`).join('')}
+  `;
+  // Note preview
+  const noteEl = document.getElementById('post-log-note-preview');
+  if (entry.note) {
+    const preview = entry.note.length > 60 ? entry.note.slice(0, 60) + '…' : entry.note;
+    noteEl.innerHTML = `<div class="post-log-note-preview">"${escapeHtml(preview)}"</div>`;
+  } else {
+    noteEl.innerHTML = '';
+  }
+
+  document.getElementById('log-form').style.display = 'none';
+  document.getElementById('post-log-prompt').style.display = 'block';
+}
+
+function dismissReleasePrompt() {
+  document.getElementById('post-log-prompt').style.display = 'none';
+  document.getElementById('log-form').style.display = 'block';
+  showToast('✓ 情绪已记录');
+}
+
+function startReleaseFromPrompt() {
+  document.getElementById('post-log-prompt').style.display = 'none';
+  document.getElementById('log-form').style.display = 'block';
+  if (lastLoggedEntryId) openSedonaForEntry(lastLoggedEntryId);
+}
+
+// ═══════════════════════════════════════════
+//  JOURNAL — HISTORY
+// ═══════════════════════════════════════════
+function renderHistory() {
+  const container = document.getElementById('history-list');
+  document.getElementById('history-count').textContent = `共 ${entries.length} 条记录`;
+  if (entries.length === 0) {
+    container.innerHTML = `<div class="history-empty"><span class="empty-icon">🌱</span>还没有任何记录<br>去「记录」标签写下今天的情绪吧</div>`;
+    return;
+  }
+  const groups = {};
+  entries.forEach(e => {
+    const dk = e.timestamp.split('T')[0];
+    if (!groups[dk]) groups[dk] = [];
+    groups[dk].push(e);
+  });
+  const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  container.innerHTML = sortedDates.map(date => {
+    let dayStr;
+    if (date === today) dayStr = '今天 · ' + formatDateShort(date);
+    else if (date === yesterday) dayStr = '昨天 · ' + formatDateShort(date);
+    else dayStr = formatDateFull(date);
+    const cards = groups[date].map(e => buildHistoryCard(e)).join('');
+    return `<div class="day-group"><div class="day-label">${dayStr}</div>${cards}</div>`;
+  }).join('');
+}
+
+function buildHistoryCard(e) {
+  const m = MOODS[e.mood];
+  const timeStr = formatTime(e.timestamp);
+  const tagsHtml = e.tags.length
+    ? `<div class="history-tags">${e.tags.map(t => `<span class="history-tag">${t}</span>`).join('')}</div>`
+    : '';
+  const noteHtml = e.note
+    ? `<div class="history-note">${escapeHtml(e.note)}</div>`
+    : '';
+  const releases = e.releases || [];
+  const releaseBadge = releases.length > 0
+    ? `<span class="release-badge">🌿 已释放 ×${releases.length}</span>`
+    : '';
+  const releaseBtn = releases.length > 0
+    ? `<button class="release-entry-btn" onclick="openSedonaForEntry('${e.id}')">再次释放</button>`
+    : `<button class="release-entry-btn" onclick="openSedonaForEntry('${e.id}')">🌿 开始释放</button>`;
+
+  return `
+    <div class="history-card" id="card-${e.id}">
+      <button class="delete-btn" onclick="deleteEntry('${e.id}')" title="删除">×</button>
+      <div class="history-card-top">
+        <div class="history-mood-dot" style="background:${m.color}"></div>
+        <div class="history-mood-name">${m.emoji} ${m.label}</div>
+        <div class="history-time">${timeStr}</div>
+        <div class="history-intensity">强度 ${e.intensity}</div>
+      </div>
+      ${tagsHtml}
+      ${noteHtml}
+      <div class="history-card-footer">
+        <div class="release-badge-row">${releaseBadge}</div>
+        ${releaseBtn}
+      </div>
+    </div>`;
+}
+
+function deleteEntry(id) {
+  if (!confirm('确认删除这条记录？')) return;
+  entries = entries.filter(e => e.id !== id);
+  saveEntries();
+  renderHistory();
+  showToast('已删除');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `情绪日记_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const imported = JSON.parse(text);
+    if (!Array.isArray(imported)) throw new Error('格式错误');
+    const existingIds = new Set(entries.map(e => e.id));
+    const newEntries = imported.filter(e => !existingIds.has(e.id)).map(e => ({ releases: [], ...e }));
+    entries = [...newEntries, ...entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    await saveEntries();
+    renderHistory();
+    showToast(`✓ 导入了 ${newEntries.length} 条记录`);
+  } catch(e) { showToast('导入失败，请检查文件格式'); }
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+//  DATE / UTIL HELPERS
+// ═══════════════════════════════════════════
+function formatDateShort(ds) { const [,m,d]=ds.split('-'); return `${+m}月${+d}日`; }
+function formatDateFull(ds) {
+  const [y,m,d]=ds.split('-');
+  const w=['周日','周一','周二','周三','周四','周五','周六'][new Date(ds).getDay()];
+  return `${y}年${+m}月${+d}日 ${w}`;
+}
+function formatTime(iso) {
+  const d=new Date(iso);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name==='history') renderHistory();
+  if (name==='insight') renderInsight();
+  if (name==='trend')   renderTrend();
+  if (name==='dist')    renderDist();
+}
+
+// ═══════════════════════════════════════════
+//  INSIGHT
+// ═══════════════════════════════════════════
+const LOW_ENERGY_MOODS = ['apathy','grief','fear','lust','anger'];
+
+function renderInsight() {
+  const container = document.getElementById('insight-content');
+  if (entries.length < 3) {
+    container.innerHTML = `<div class="insight-empty">🌱 再记录几条之后<br>就能看到你的情绪模式了</div>`;
+    return;
+  }
+  const tagStats = {};
+  entries.forEach(e => {
+    e.tags.forEach(t => {
+      if (!tagStats[t]) tagStats[t] = { total:0, lowEnergy:0 };
+      tagStats[t].total++;
+      if (LOW_ENERGY_MOODS.includes(e.mood)) tagStats[t].lowEnergy++;
+    });
+  });
+  const sortedTags = Object.entries(tagStats)
+    .filter(([,s])=>s.total>=1)
+    .map(([tag,s])=>({tag,...s,ratio:s.lowEnergy/s.total}))
+    .sort((a,b)=>b.ratio-a.ratio||b.total-a.total);
+  const triggerHtml = sortedTags.length===0
+    ? '<p style="color:var(--text-muted);font-size:13px">还没有选择过触发因素</p>'
+    : sortedTags.map(item=>{
+        const pct=Math.round(item.ratio*100);
+        const cls=item.ratio>0.6?'negative':item.ratio>0.3?'mixed':'positive';
+        const label=item.ratio>0.6?'⚠ 高风险':item.ratio>0.3?'中性':'✓ 正向';
+        return `<div class="trigger-bar-item">
+          <div class="trigger-bar-header">
+            <span class="trigger-bar-name">${item.tag}</span>
+            <span class="trigger-bar-stats">${label} · 低能 ${item.lowEnergy}/${item.total} 次</span>
+          </div>
+          <div class="trigger-bar-track">
+            <div class="trigger-bar-fill ${cls}" style="width:${pct}%"></div>
+          </div></div>`;
+      }).join('');
+  const lowEnergyNotes = entries
+    .filter(e=>LOW_ENERGY_MOODS.includes(e.mood)&&e.note&&e.note.trim().length>5)
+    .map(e=>({mood:MOODS[e.mood].label,note:e.note.trim(),date:e.timestamp.split('T')[0]}));
+  const noteCountHtml = lowEnergyNotes.length>0
+    ? `<div class="insight-note-count">📝 基于 ${lowEnergyNotes.length} 条低能量时期的备注进行分析</div>`
+    : `<div class="insight-note-count" style="color:#e07b6b55">还没有低能量状态下的文字备注，写几条再来分析</div>`;
+  container.innerHTML = `
+    <div class="insight-section" style="margin-top:8px">
+      <div class="insight-section-title">⚡ 触发点分析</div>
+      <div id="trigger-bars">${triggerHtml}</div>
+    </div>
+    <div class="insight-section">
+      <div class="insight-section-title">🧠 负面念头模式</div>
+      ${noteCountHtml}
+      <button class="insight-analyze-btn" id="analyze-btn" onclick="runAIAnalysis()" ${lowEnergyNotes.length===0?'disabled':''}>
+        <span id="analyze-btn-text">用 AI 分析我的念头模式</span>
+      </button>
+      <div id="ai-result"></div>
+    </div>`;
+}
+
+async function runAIAnalysis() {
+  const btn=document.getElementById('analyze-btn');
+  const btnText=document.getElementById('analyze-btn-text');
+  const resultBox=document.getElementById('ai-result');
+  const lowEnergyNotes=entries
+    .filter(e=>LOW_ENERGY_MOODS.includes(e.mood)&&e.note&&e.note.trim().length>5)
+    .map(e=>`[${e.timestamp.split('T')[0]} · ${MOODS[e.mood].label}] ${e.note.trim()}`);
+  if (lowEnergyNotes.length===0) return;
+  btn.disabled=true;
+  btnText.innerHTML=`正在分析… <span class="loading-dots"><span></span><span></span><span></span></span>`;
+  resultBox.innerHTML='';
+  const prompt=`你是一位温暖而洞察力强的心理觉察教练，擅长圣多纳释放法和正念。\n\n以下是用户在情绪低落时写下的备注：\n\n${lowEnergyNotes.join('\n')}\n\n请用JSON格式返回分析结果（不要输出任何JSON以外的内容）：\n\n{"patterns":[{"theme":"简短的念头主题（10字以内）","frequency":"高频/中频/低频","description":"对这个念头模式的描述（30-50字，温和客观）","reframe":"一句释放/转化的提示（从圣多纳或正念视角，20-30字）"}],"summary":"总体一句话洞察（30字以内）"}\n\n最多返回5个模式，按频率从高到低排列。`;
+  try {
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await response.json();
+    const raw=data.content?.[0]?.text||'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const result=JSON.parse(clean);
+    btn.disabled=false;
+    btnText.innerHTML='重新分析';
+    if (!result.patterns||result.patterns.length===0) {
+      resultBox.innerHTML=`<div class="ai-result-box" style="text-align:center;color:var(--text-muted);font-size:13px;padding:30px">备注内容还不够多，写更多情绪日记后再来看看 🌱</div>`;
+      return;
+    }
+    const summaryHtml=result.summary?`<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;font-style:italic;padding:10px 14px;background:var(--bg);border-radius:10px;">💬 ${result.summary}</div>`:'';
+    const patternsHtml=result.patterns.map(p=>`
+      <div class="thought-pattern">
+        <div class="thought-pattern-header">
+          <span class="thought-freq-badge">${p.frequency}</span>
+          <span class="thought-pattern-text">${escapeHtml(p.theme)}</span>
+        </div>
+        <div class="thought-pattern-desc">${escapeHtml(p.description)}</div>
+        <div class="reframe-hint"><span class="reframe-icon">🌿</span><span>${escapeHtml(p.reframe)}</span></div>
+      </div>`).join('');
+    resultBox.innerHTML=`<div class="ai-result-box">${summaryHtml}${patternsHtml}</div>`;
+  } catch(err) {
+    btn.disabled=false;
+    btnText.innerHTML='重试分析';
+    resultBox.innerHTML=`<div style="color:#e07b6b;font-size:12px;text-align:center;padding:16px">分析失败：${err.message||'未知错误'}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TREND + DIST
+// ═══════════════════════════════════════════
+function renderTrend() {
+  if (entries.length===0) {
+    document.getElementById('stats-row').innerHTML='<div class="no-data">还没有记录，快去写第一条吧 🌱</div>';
+    return;
+  }
+  const n=entries.length;
+  const avgEnergy=(entries.reduce((s,e)=>s+MOODS[e.mood].energy,0)/n).toFixed(1);
+  const avgInt=(entries.reduce((s,e)=>s+e.intensity,0)/n).toFixed(1);
+  const datesWithEntry=new Set(entries.map(e=>e.timestamp.split('T')[0]));
+  let streak=0;const cur=new Date();
+  while(true){const ds=cur.toISOString().split('T')[0];if(datesWithEntry.has(ds)){streak++;cur.setDate(cur.getDate()-1);}else break;}
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${n}</div><div class="stat-label">总记录数</div></div>
+    <div class="stat-card"><div class="stat-val">${avgEnergy}</div><div class="stat-label">平均能量</div></div>
+    <div class="stat-card"><div class="stat-val">${streak}</div><div class="stat-label">连续天数</div></div>`;
+  const recent=[...entries].reverse().slice(-40);
+  const labels=recent.map(e=>{const d=new Date(e.timestamp);return `${d.getMonth()+1}/${d.getDate()} ${formatTime(e.timestamp)}`;});
+  const data=recent.map(e=>MOODS[e.mood].energy);
+  const pointColors=recent.map(e=>MOODS[e.mood].color);
+  if(trendChart)trendChart.destroy();
+  const ctx=document.getElementById('trend-chart').getContext('2d');
+  trendChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{data,borderColor:'#2a1f1a',borderWidth:2,pointBackgroundColor:pointColors,pointBorderColor:'#faf7f2',pointBorderWidth:2,pointRadius:6,tension:0.4,fill:true,backgroundColor:(ctx)=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,180);g.addColorStop(0,'rgba(42,31,26,0.08)');g.addColorStop(1,'rgba(42,31,26,0)');return g;}}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:(ctx)=>{const e=recent[ctx.dataIndex];return ` ${MOODS[e.mood].emoji} ${MOODS[e.mood].label}  强度 ${e.intensity}`;}}}},scales:{x:{ticks:{font:{family:'Noto Serif SC',size:10},color:'#9a8f86',maxTicksLimit:8},grid:{display:false}},y:{min:0.5,max:9.5,ticks:{font:{family:'Noto Serif SC',size:10},color:'#9a8f86',stepSize:1,callback:(v)=>{const m=MOOD_KEYS.find(k=>MOODS[k].energy===v);return m?MOODS[m].emoji:'';}},grid:{color:'#e0d6c8'}}}}});
+}
+
+function renderDist() {
+  if(entries.length===0){document.getElementById('pie-chart').parentElement.innerHTML+='<div class="no-data" style="margin-top:12px">还没有记录 🌱</div>';return;}
+  const cnt={};MOOD_KEYS.forEach(k=>cnt[k]=0);entries.forEach(e=>cnt[e.mood]++);
+  const nonZero=MOOD_KEYS.filter(k=>cnt[k]>0);
+  if(pieChart)pieChart.destroy();
+  const ctx2=document.getElementById('pie-chart').getContext('2d');
+  pieChart=new Chart(ctx2,{type:'doughnut',data:{labels:nonZero.map(k=>`${MOODS[k].emoji} ${MOODS[k].label}`),datasets:[{data:nonZero.map(k=>cnt[k]),backgroundColor:nonZero.map(k=>MOODS[k].color),borderColor:'#faf7f2',borderWidth:3,hoverOffset:8}]},options:{responsive:true,cutout:'58%',plugins:{legend:{position:'bottom',labels:{font:{family:'Noto Serif SC',size:12},color:'#3d3530',padding:14,boxWidth:12,borderRadius:6}},tooltip:{callbacks:{label:(ctx)=>` ${ctx.raw} 次  (${Math.round(ctx.raw/entries.length*100)}%)`}}}}});
+  const tagCnt={};entries.forEach(e=>e.tags.forEach(t=>tagCnt[t]=(tagCnt[t]||0)+1));
+  const sortedTags=Object.entries(tagCnt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(tagChart)tagChart.destroy();
+  if(sortedTags.length===0){document.getElementById('tag-chart-wrap').style.display='none';return;}
+  document.getElementById('tag-chart-wrap').style.display='block';
+  const ctx3=document.getElementById('tag-chart').getContext('2d');
+  tagChart=new Chart(ctx3,{type:'bar',data:{labels:sortedTags.map(t=>t[0]),datasets:[{data:sortedTags.map(t=>t[1]),backgroundColor:['#a0a0a0','#7ea3c1','#b47ec6','#e8925a','#e07b6b','#c9a832','#7bc67e','#5bb8a8'],borderRadius:8,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'Noto Serif SC',size:12},color:'#3d3530'},grid:{display:false}},y:{ticks:{font:{family:'Noto Serif SC',size:11},color:'#9a8f86',stepSize:1},grid:{color:'#e0d6c8'}}}}});
+}
+
+// ═══════════════════════════════════════════
+//  SEDONA RELEASE ENGINE
+// ═══════════════════════════════════════════
+const SEDONA_ROOTS = [
+  { id:'approval', title:'🌸 想要被认可', desc:'需要他人肯定、认同、看见自己的价值' },
+  { id:'control',  title:'⚡ 想要控制',   desc:'需要掌控结果、进度、他人，或对失控感到恐惧' },
+  { id:'security', title:'🌿 想要安全感', desc:'需要确定性、稳定感，害怕未知或失去' },
+];
+const SEDONA_ROOT_LABELS = { approval:'想要被认可', control:'想要控制', security:'想要安全感' };
+
+let ss = {  // sedonaState
+  entryId: null,
+  step: 0,
+  rawInput: '',
+  emotionLabel: '',
+  emotionColor: '',
+  emotionNote: '',
+  bodyLocation: '',
+  bodySensation: '',
+  canAllow: null,
+  rootCause: '',
+};
+
+function openSedonaForEntry(entryId) {
+  const entry = entries.find(e => e.id === entryId);
+  if (!entry) return;
+  const m = MOODS[entry.mood];
+
+  // Init sedona state
+  ss = {
+    entryId,
+    step: 0,
+    rawInput: entry.note || '',
+    emotionLabel: m.label,
+    emotionColor: m.color,
+    emotionNote: '',
+    bodyLocation: '',
+    bodySensation: '',
+    canAllow: null,
+    rootCause: '',
+  };
+
+  // Build context bar
+  const notePreview = entry.note
+    ? `<span class="ctx-note">"${entry.note.length > 50 ? entry.note.slice(0,50)+'…' : entry.note}"</span>`
+    : '';
+  document.getElementById('sedona-context-bar').innerHTML = `
+    <div class="sedona-entry-context">
+      <span class="ctx-emoji">${m.emoji}</span>
+      <span class="ctx-mood">${m.label}</span>
+      <span style="color:var(--border)">·</span>
+      <span>${formatTime(entry.timestamp)}</span>
+      <span style="color:var(--border)">·</span>
+      <span>强度 ${entry.intensity}</span>
+      ${notePreview}
+    </div>`;
+
+  openSedonaSheet();
+  sedonaRender();
+}
+
+function openSedonaSheet() {
+  document.getElementById('sedona-sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSedonaSheet() {
+  document.getElementById('sedona-sheet').classList.remove('open');
+  document.body.style.overflow = '';
+  // Refresh history if we're on that tab
+  const histTab = document.getElementById('tab-history');
+  if (histTab && histTab.classList.contains('active')) renderHistory();
+}
+
+function sedonaRender() {
+  const app = document.getElementById('sedona-app');
+  app.innerHTML = '';
+  const steps = [
+    sedonaStep0, sedonaStep1, sedonaStep2, sedonaStep3, sedonaStep4,
+    sedonaStep5, sedonaStep6, sedonaStep7, sedonaStep8, sedonaStep9,
+  ];
+  const fn = steps[ss.step];
+  if (fn) {
+    const el = fn();
+    el.classList.add('s-card');
+    app.appendChild(el);
+  }
+}
+
+function sDots(current) {
+  let html = '<div class="s-dots">';
+  for (let i = 0; i < 9; i++) {
+    if (i < current) html += '<div class="s-dot done"></div>';
+    else if (i === current) html += '<div class="s-dot active"></div>';
+    else html += '<div class="s-dot"></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// Step 0 – input feeling
+function sedonaStep0() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(0)}
+    <div class="s-label">开始</div>
+    <div class="s-question">现在，你感受到了什么？<br><em>用你自己的话说就好。</em></div>
+    <div class="s-hint" style="font-size:12px">闭上眼睛几秒钟，感受一下身体。<br>下面已经为你预填了备注，可以直接修改或补充。</div>
+    <textarea class="s-input" id="s-feeling-input" placeholder="例如：我很烦，不想看论文……" rows="3">${escapeHtml(ss.rawInput)}</textarea>
+    <div class="s-btn-row">
+      <button class="s-btn-primary" onclick="sedonaSubmitFeeling()">继续 →</button>
+    </div>`;
+  return div;
+}
+
+async function sedonaSubmitFeeling() {
+  const input = document.getElementById('s-feeling-input').value.trim();
+  if (!input) return;
+  ss.rawInput = input;
+  ss.step = 1;
+  sedonaRender();
+
+  // AI: identify emotion
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content:
+          `根据圣多纳释放法的情绪层级（万念俱灰、悲苦、恐惧、贪求、愤怒、傲慢、勇气、接纳、平静），判断以下描述对应的情绪。\n\n用户描述："${input}"\n\n只返回JSON，格式：{"emotion": "情绪中文名", "color": "十六进制颜色（低能量偏冷灰，高能量偏暖亮）", "note": "一句温和的共情（15字以内）"}\n不要输出任何JSON以外的内容。`
+        }]
+      })
+    });
+    const data = await response.json();
+    const raw = data.content?.[0]?.text || '';
+    const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    ss.emotionLabel = result.emotion || ss.emotionLabel;
+    ss.emotionColor = result.color || ss.emotionColor;
+    ss.emotionNote  = result.note  || '我听到你了。';
+  } catch(e) {
+    ss.emotionNote = '我听到你了。';
+  }
+  ss.step = 2;
+  sedonaRender();
+}
+
+// Step 1 – loading
+function sedonaStep1() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(1)}
+    <div style="text-align:center;padding:24px 0">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">正在感受你的情绪……</div>
+      <div class="s-loading-dots"><span></span><span></span><span></span></div>
+    </div>`;
+  return div;
+}
+
+// Step 2 – body scan: where
+function sedonaStep2() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(2)}
+    <div class="s-emotion-tag" style="background:${ss.emotionColor}22; color:${ss.emotionColor}; border:1px solid ${ss.emotionColor}44">
+      ● ${ss.emotionLabel}
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${ss.emotionNote}</div>
+    <div class="s-label">身体扫描</div>
+    <div class="s-question">把注意力轻轻放到身体里。<br>这份感受，在<em>哪个地方</em>？</div>
+    <div class="s-hint">胸口、喉咙、肚子、肩膀、头部……<br>不用找到"正确答案"，哪里有感觉说哪里。</div>
+    <textarea class="s-input" id="s-body-input" placeholder="例如：喉咙" rows="2"></textarea>
+    <div class="s-btn-row">
+      <button class="s-btn-primary" onclick="sedonaSubmitBody()">继续 →</button>
+    </div>`;
+  return div;
+}
+function sedonaSubmitBody() {
+  const val = document.getElementById('s-body-input').value.trim();
+  if (!val) return;
+  ss.bodyLocation = val;
+  ss.step = 3;
+  sedonaRender();
+}
+
+// Step 3 – body sensation: what does it feel like
+function sedonaStep3() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(3)}
+    <div class="s-label">身体扫描</div>
+    <div class="s-question"><em>${ss.bodyLocation}</em>那里，<br>那个感觉是什么状态？</div>
+    <div class="s-hint">紧绷、堵住、沉重、发热、收缩……<br>就像在描述一个物体一样描述它。</div>
+    <textarea class="s-input" id="s-sensation-input" placeholder="例如：紧绷、发热" rows="2"></textarea>
+    <div class="s-btn-row">
+      <button class="s-btn-primary" onclick="sedonaSubmitSensation()">继续 →</button>
+    </div>`;
+  return div;
+}
+function sedonaSubmitSensation() {
+  const val = document.getElementById('s-sensation-input').value.trim();
+  if (!val) return;
+  ss.bodySensation = val;
+  ss.step = 4;
+  sedonaRender();
+}
+
+// Step 4 – can you allow
+function sedonaStep4() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(4)}
+    <div class="s-label">欢迎它</div>
+    <div class="s-question">把注意力放在 <em>${ss.bodyLocation}</em> 那里。<br>那份 <em>${ss.bodySensation}</em> 的感觉——</div>
+    <div class="s-hint">不用改变它，不用推开它。<br>就像你在观察一朵云，你看着它，但你不是那朵云。</div>
+    <div class="s-question" style="margin-top:16px;margin-bottom:12px;font-size:16px">你能允许这个感觉<em>就这样存在</em>吗？<br>哪怕只是这一刻。</div>
+    <div class="s-choice-row">
+      <button class="s-choice yes" onclick="sedonaSelectAllow(true)">可以</button>
+      <button class="s-choice no"  onclick="sedonaSelectAllow(false)">有点难</button>
+    </div>`;
+  return div;
+}
+function sedonaSelectAllow(yes) {
+  if (!yes) {
+    const note = document.createElement('div');
+    note.className = 's-note-append';
+    note.innerHTML = '没关系。试着再给它一点空间——哪怕1%的允许也好。<br>你不需要喜欢它，只是不抗拒它的存在。';
+    document.getElementById('sedona-app').firstChild.appendChild(note);
+    return;
+  }
+  ss.step = 5;
+  sedonaRender();
+}
+
+// Step 5 – find root
+function sedonaStep5() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(5)}
+    <div class="s-label">找到根源</div>
+    <div class="s-question">这份感受背后，<br>最重的是哪一种<em>想要</em>？</div>
+    <div class="s-root-grid">
+      ${SEDONA_ROOTS.map(r=>`
+        <div class="s-root-card" id="sroot-${r.id}" onclick="sedonaSelectRoot('${r.id}')">
+          <div class="s-root-title">${r.title}</div>
+          <div class="s-root-desc">${r.desc}</div>
+        </div>`).join('')}
+    </div>
+    <div class="s-btn-row" style="margin-top:16px">
+      <button class="s-btn-primary" id="s-root-confirm" onclick="sedonaConfirmRoot()" disabled>确认 →</button>
+    </div>`;
+  return div;
+}
+function sedonaSelectRoot(id) {
+  document.querySelectorAll('.s-root-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('sroot-'+id).classList.add('selected');
+  ss.rootCause = id;
+  document.getElementById('s-root-confirm').disabled = false;
+}
+function sedonaConfirmRoot() {
+  if (!ss.rootCause) return;
+  ss.step = 6;
+  sedonaRender();
+}
+
+// Step 6 – willing to release
+function sedonaStep6() {
+  const rootLabel = SEDONA_ROOT_LABELS[ss.rootCause];
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(6)}
+    <div class="s-root-badge">🌀 根源：${rootLabel}</div>
+    <div class="s-label">第一个问题</div>
+    <div class="s-question">你愿意放下这个<em>"${rootLabel}"</em>的需要吗？</div>
+    <div class="s-hint">不是说你要放弃目标，<br>只是放下那个"必须如此"的抓取感。</div>
+    <div class="s-choice-row" style="margin-top:20px">
+      <button class="s-choice yes" onclick="sedonaAnswerWilling(true)">愿意</button>
+      <button class="s-choice no"  onclick="sedonaAnswerWilling(false)">不太愿意</button>
+    </div>`;
+  return div;
+}
+function sedonaAnswerWilling(yes) {
+  if (!yes) {
+    const note = document.createElement('div');
+    note.className = 's-note-append';
+    note.innerHTML = '不愿意也没关系，这本身就是一个诚实的回答。<br>只是问问自己：如果愿意，会怎样？';
+    document.getElementById('sedona-app').firstChild.appendChild(note);
+    setTimeout(() => { ss.step = 7; sedonaRender(); }, 2200);
+    return;
+  }
+  ss.step = 7;
+  sedonaRender();
+}
+
+// Step 7 – when
+function sedonaStep7() {
+  const rootLabel = SEDONA_ROOT_LABELS[ss.rootCause];
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(7)}
+    <div class="s-label">第二个问题</div>
+    <div class="s-question">那你<em>什么时候</em>愿意<br>放下"${rootLabel}"这个需要？</div>
+    <div class="s-choice-row" style="margin-top:20px">
+      <button class="s-choice yes" onclick="sedonaAnswerWhen()">就是现在</button>
+    </div>`;
+  return div;
+}
+function sedonaAnswerWhen() { ss.step = 8; sedonaRender(); }
+
+// Step 8 – check remainder
+function sedonaStep8() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(8)}
+    <div class="s-label">检查</div>
+    <div class="s-question">放下它。<br><br>再感受一下 <em>${ss.bodyLocation}</em>，<br>那里现在怎么样了？</div>
+    <div class="s-hint">完全消失了？还是还有一些剩余的感觉？<br>有剩余也完全正常，一层一层来。</div>
+    <div class="s-choice-row" style="margin-top:20px">
+      <button class="s-choice yes" onclick="sedonaCheckRemainder(false)">消失了 / 好多了</button>
+      <button class="s-choice no"  onclick="sedonaCheckRemainder(true)">还有一些</button>
+    </div>`;
+  return div;
+}
+function sedonaCheckRemainder(hasMore) {
+  if (hasMore) {
+    ss.step = 4;
+    sedonaRender();
+    const note = document.createElement('div');
+    note.className = 's-note-append';
+    note.innerHTML = '很好，继续陪着它。一层一层往下走。';
+    document.getElementById('sedona-app').firstChild.appendChild(note);
+    return;
+  }
+  // Save release to entry
+  sedonaSaveRelease();
+  ss.step = 9;
+  sedonaRender();
+}
+
+function sedonaSaveRelease() {
+  if (!ss.entryId) return;
+  const entry = entries.find(e => e.id === ss.entryId);
+  if (!entry) return;
+  if (!entry.releases) entry.releases = [];
+  entry.releases.push({
+    id: Date.now().toString(),
+    completedAt: new Date().toISOString(),
+    emotionLabel: ss.emotionLabel,
+    bodyLocation: ss.bodyLocation,
+    bodySensation: ss.bodySensation,
+    rootCause: ss.rootCause,
+    rootLabel: SEDONA_ROOT_LABELS[ss.rootCause],
+  });
+  saveEntries();
+}
+
+// Step 9 – completion
+function sedonaStep9() {
+  const div = document.createElement('div');
+  div.innerHTML = `
+    ${sDots(9)}
+    <div class="s-completion">
+      <div class="s-completion-icon">🌿</div>
+      <div class="s-completion-title">这次释放完成了</div>
+      <div class="s-completion-desc">
+        你刚才做了一件很了不起的事——<br>
+        你没有逃开那份感受，你陪着它走完了。<br><br>
+        <em>${ss.emotionLabel}</em> 背后的 <em>${SEDONA_ROOT_LABELS[ss.rootCause]}</em>，<br>
+        今天松动了一点。
+      </div>
+      <div class="s-btn-row">
+        <button class="s-btn-primary"   onclick="sedonaRestart()">再做一次</button>
+        <button class="s-btn-secondary" onclick="closeSedonaSheet()">返回日记</button>
+      </div>
+    </div>`;
+  return div;
+}
+
+function sedonaRestart() {
+  ss.step = 0;
+  ss.rawInput = '';
+  ss.emotionLabel = MOODS[entries.find(e=>e.id===ss.entryId)?.mood||'peace']?.label || '';
+  ss.emotionColor = MOODS[entries.find(e=>e.id===ss.entryId)?.mood||'peace']?.color || '';
+  ss.emotionNote = '';
+  ss.bodyLocation = '';
+  ss.bodySensation = '';
+  ss.canAllow = null;
+  ss.rootCause = '';
+  sedonaRender();
+}
+</script>
+</body>
+</html>

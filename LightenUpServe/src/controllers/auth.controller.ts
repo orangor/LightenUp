@@ -17,10 +17,33 @@ class AuthController {
     const { email, password } = req.body
 
     const existingUser = await UserModel.findByEmail(email)
+
+    // 如果用户存在
     if (existingUser) {
-      throw new ValidationError('该邮箱已被注册')
+      // 1. 如果已经验证过，直接抛出异常提示已注册
+      if (existingUser.email_verified) {
+        throw new ValidationError('该邮箱已被注册')
+      }
+
+      // 2. 如果未验证，允许重新发送验证邮件
+
+      // 限制：如果已经有有效的 verification_token 且距离上次发送不久，可以拒绝
+      // 这里为了用户体验，允许重发，但可以更新密码
+
+      // 更新密码（因为用户可能忘了之前的密码，重新注册时输入了新密码）
+      await UserModel.update(existingUser.id, { password })
+
+      // 创建并发送验证邮件
+      const verificationToken = await UserModel.createVerificationToken(existingUser.id)
+      await sendVerificationEmail(email, verificationToken)
+
+      return {
+        userId: existingUser.id,
+        message: '邮箱未验证，已更新密码并重新发送验证邮件',
+      }
     }
 
+    // 用户不存在，正常创建
     const userId = await UserModel.create({ email, password })
 
     // 创建并发送验证邮件
@@ -69,6 +92,11 @@ class AuthController {
       throw new ValidationError('用户名或密码错误')
     }
 
+    // 检查邮箱是否已验证
+    if (!user.email_verified) {
+      throw new ValidationError('邮箱未验证，请先前往邮箱完成验证')
+    }
+
     const isValidPassword = await UserModel.verifyPassword(password, user.password)
     if (!isValidPassword) {
       throw new ValidationError('用户名或密码错误')
@@ -85,6 +113,34 @@ class AuthController {
         id: user.id,
         email: user.email,
       },
+    }
+  }
+
+  @Get('/api/verify-email', '邮箱验证跳转', '验证邮箱并跳转到登录页', [
+    {
+      name: 'token',
+      in: 'query',
+      required: true,
+      schema: { type: 'string' },
+      description: '验证令牌',
+    },
+  ])
+  static async verifyEmailLink(req: Request, res: Response) {
+    const { token } = req.query
+    // 强制使用线上前端地址
+    const frontendUrl = 'http://moxae.com'
+
+    if (!token || typeof token !== 'string') {
+      return res.redirect(`${frontendUrl}/login?error=invalid_token`)
+    }
+
+    try {
+      await UserModel.verifyEmail(token)
+      return res.redirect(`${frontendUrl}/login?verified=true`)
+    } catch (error) {
+      console.error('Verify email error:', error)
+      const message = error instanceof Error ? error.message : '验证失败'
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`)
     }
   }
 

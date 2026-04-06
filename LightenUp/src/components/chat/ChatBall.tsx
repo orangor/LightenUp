@@ -5,21 +5,22 @@ import './ChatBall.css';
 interface ChatBallProps {
   ballRef: React.RefObject<HTMLDivElement>;
   handleBallClick: () => void;
-  handleMouseDown: (e: React.MouseEvent) => void;
+  handlePointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 const ChatBall: React.FC<ChatBallProps> = ({ 
   ballRef, 
   handleBallClick, 
-  handleMouseDown 
+  handlePointerDown 
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [mouseDownTime, setMouseDownTime] = useState(0);
 
-  const handleMouseDownEvent = (e: React.MouseEvent) => {
+  const handlePointerDownEvent = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(false);
     setMouseDownTime(Date.now());
-    handleMouseDown(e);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    handlePointerDown(e);
   };
 
   const handleClickEvent = () => {
@@ -29,8 +30,14 @@ const ChatBall: React.FC<ChatBallProps> = ({
     }
   };
 
-  const handleMouseMove = () => {
+  const handlePointerMove = () => {
     setIsDragging(true);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   };
 
   return (
@@ -38,8 +45,9 @@ const ChatBall: React.FC<ChatBallProps> = ({
       ref={ballRef} 
       className="chat-ball" 
       onClick={handleClickEvent}
-      onMouseDown={handleMouseDownEvent}
-      onMouseMove={handleMouseMove}
+      onPointerDown={handlePointerDownEvent}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     >
       <div className="ball-content">
         <span className="ball-icon">{CHAT_TEXT.ball.icon}</span>

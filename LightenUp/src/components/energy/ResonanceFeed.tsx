@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EnergyService } from '../../api/energyService';
 import { EnergyMoment } from '../../api/energyTypes';
 import { Tooltip, Image, Modal, message, Button } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { clearEnergyPublishDraft, EnergyPublishDraft, readEnergyPublishDraft } from '../../pages/energy/draftStorage';
 import './ResonanceFeed.scss';
 
 const ResonanceFeed: React.FC = () => {
+  const navigate = useNavigate();
   const [moments, setMoments] = useState<EnergyMoment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState<EnergyPublishDraft | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchFeed = async () => {
+      setDraft(readEnergyPublishDraft());
       try {
         const { items } = await EnergyService.getFeed({ page: 1, limit: 10 });
         setMoments(items);
@@ -24,6 +29,21 @@ const ResonanceFeed: React.FC = () => {
     };
     fetchFeed();
   }, []);
+
+  const handleDiscardDraft = () => {
+    Modal.confirm({
+      title: '清空草稿',
+      content: '清空后将无法恢复，确定删除这份草稿吗？',
+      okText: '删除',
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: () => {
+        clearEnergyPublishDraft();
+        setDraft(null);
+        message.success('草稿已清空');
+      },
+    });
+  };
 
   const handleDelete = (momentId: number) => {
     Modal.confirm({
@@ -58,6 +78,16 @@ const ResonanceFeed: React.FC = () => {
     }
   };
 
+  const getDraftSummary = () => {
+    if (!draft) return '';
+    const text = draft.content.trim();
+    if (text) return text.length > 48 ? `${text.slice(0, 48)}...` : text;
+    if (draft.files.length > 0) return `已保存 ${draft.files.length} 个媒体文件`;
+    if (draft.mood) return `已保存心情：${draft.mood.name}`;
+    if (draft.selectedTypeId !== null || draft.selectedStickerId !== null) return '已保存当前心情选择';
+    return '继续完善这条未发布的记录';
+  };
+
   const getMediaLayout = (count: number) => {
     const gap = 4;
     if (count <= 1) return { cols: 1, cell: 168, gap };
@@ -71,6 +101,41 @@ const ResonanceFeed: React.FC = () => {
 
   return (
     <div className="feed-container">
+      {draft && (
+        <div className="draft-card">
+          <div className="draft-meta">
+            <span className="draft-badge">草稿箱</span>
+            <span className="draft-time">{formatDate(draft.savedAt)}</span>
+          </div>
+          {draft.mood && (
+            <div className="draft-mood">
+              <div
+                className="draft-mood-icon"
+                style={{ backgroundColor: `${draft.mood.colorHex}20`, color: draft.mood.colorHex }}
+              >
+                {draft.mood.stickerUrl || draft.mood.iconCode}
+              </div>
+              <span className="draft-mood-name">{draft.mood.name}</span>
+            </div>
+          )}
+          <div className="draft-title">你有一条未发布的记录</div>
+          <div className="draft-content">{getDraftSummary()}</div>
+          <div className="draft-footer">
+            <span className="draft-count">
+              {draft.files.length > 0 ? `${draft.files.length} 个附件` : '暂无附件'}
+            </span>
+            <div className="draft-actions">
+              <button className="draft-link" onClick={handleDiscardDraft}>
+                清空
+              </button>
+              <button className="draft-primary" onClick={() => navigate('/energy/publish')}>
+                继续编辑
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {moments.map((moment) => (
         <div key={moment.id} className="feed-item">
           {/* 左侧头像区 */}

@@ -16,6 +16,7 @@
   background: rgba(255, 255, 255, 0.95);
   cursor: move;
   user-select: none;
+  touch-action: none;
 }
 
 .chat-header h2 {

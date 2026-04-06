@@ -63,11 +63,12 @@ export const sendEmail = (to: string, subject: string, html: string): Promise<vo
 
 export const sendVerificationEmail = async (to: string, token: string): Promise<void> => {
   const baseUrl = process.env.APP_URL || 'http://moxae.com'
-  const verificationUrl = `${baseUrl}/verify-email?token=${token}`
+  const verificationUrl = `${baseUrl}/api/verify-email?token=${token}`
   const html = `
     <h1>验证您的邮箱</h1>
     <p>请点击下面的链接验证您的邮箱：</p>
     <a href="${verificationUrl}">验证邮箱</a>
+    <p>此链接将在7天后失效。</p>
     <p>如果您没有注册账号，请忽略此邮件。</p>
   `
   await sendEmail(to, '验证您的邮箱', html)
@@ -81,7 +82,7 @@ export const sendPasswordResetEmail = async (to: string, token: string): Promise
     <p>请点击下面的链接进入重置密码页面：</p>
     <a href="${resetUrl}">重置密码</a>
     <p>如果您没有请求重置密码，请忽略此邮件。</p>
-    <p>此链接将在1小时后失效。</p>
+    <p>此链接将在24小时后失效。</p>
   `
   await sendEmail(to, '重置密码', html)
 }

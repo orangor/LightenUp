@@ -304,21 +304,23 @@ export default class EnergyModel {
     const { userId, startDate, endDate, days = 30, limit, groupBy = 'raw' } = params
     const whereParts: string[] = ['m.user_id = ?']
     const values: any[] = [userId]
+    const normalizedStartDate = startDate ? new Date(startDate) : null
+    const normalizedEndDate = endDate ? new Date(endDate) : null
 
-    if (groupBy !== 'raw') {
-      // 当非 raw 时，继续使用按天的逻辑过滤
-      if (startDate) {
-        whereParts.push('m.created_at >= ?')
-        values.push(new Date(startDate))
-      } else if (days && days > 0) {
-        const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-        whereParts.push('m.created_at >= ?')
-        values.push(from)
-      }
-      if (endDate) {
-        whereParts.push('m.created_at <= ?')
-        values.push(new Date(endDate))
-      }
+    if (normalizedStartDate) {
+      normalizedStartDate.setHours(0, 0, 0, 0)
+      whereParts.push('m.created_at >= ?')
+      values.push(normalizedStartDate)
+    } else if (days && days > 0) {
+      const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+      whereParts.push('m.created_at >= ?')
+      values.push(from)
+    }
+
+    if (normalizedEndDate) {
+      normalizedEndDate.setHours(23, 59, 59, 999)
+      whereParts.push('m.created_at <= ?')
+      values.push(normalizedEndDate)
     }
 
     const whereSql = whereParts.join(' AND ')

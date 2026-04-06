@@ -72,8 +72,20 @@ export class RouteScanner {
 
   private static extractTag(path: string): string {
     // 从路径提取标签
-    const parts = path.split('/')
-    return parts[2].charAt(0).toUpperCase() + parts[2].slice(1) // 例如 /api/auth/login -> Auth
+    const parts = path.split('/').filter(Boolean)
+    
+    // 如果是 /api/auth/login 格式，取 auth (index 1)
+    if (parts.length >= 2 && parts[0] === 'api') {
+      return parts[1].charAt(0).toUpperCase() + parts[1].slice(1)
+    }
+    
+    // 如果是 /verify-email 格式，取 verify-email (index 0)
+    if (parts.length > 0) {
+      const tag = parts[0]
+      return tag.charAt(0).toUpperCase() + tag.slice(1)
+    }
+    
+    return 'General'
   }
 
   private static generateDocs() {

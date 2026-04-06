@@ -13,10 +13,26 @@ const SYSTEM_MESSAGE: ChatMessage = {
   content: AI_SYSTEM_PROMPT
 };
 
-// 添加常量定义
 const BALL_SIZE = { width: 80, height: 60 };
-const CHAT_SIZE = { width: 760, height: 800 };
+const CHAT_SIZE = { width: 760, height: 700 };
 const BUFFER = 5;
+const MOBILE_BREAKPOINT = 768;
+const MOBILE_MARGIN = 16;
+
+const isMobileViewport = () => window.innerWidth <= MOBILE_BREAKPOINT;
+
+const getExpandedSize = () => {
+  if (!isMobileViewport()) {
+    return CHAT_SIZE;
+  }
+
+  return {
+    width: Math.min(window.innerWidth - MOBILE_MARGIN * 2, 420),
+    height: Math.min(window.innerHeight - MOBILE_MARGIN * 2, 640)
+  };
+};
+
+const getSurfaceSize = (expanded: boolean) => (expanded ? getExpandedSize() : BALL_SIZE);
 
 const Chat: React.FC = () => {
   // 状态管理
@@ -40,11 +56,10 @@ const Chat: React.FC = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
-  // 计算有效位置的工具函数
   const calculateValidPosition = (pos: { x: number, y: number }, expanded: boolean) => {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
-    const { width, height } = expanded ? CHAT_SIZE : BALL_SIZE;
+    const { width, height } = getSurfaceSize(expanded);
     
     return {
       x: Math.max(BUFFER, Math.min(pos.x, windowWidth - width - BUFFER)),
@@ -52,37 +67,34 @@ const Chat: React.FC = () => {
     };
   };
 
-  // 处理展开/收缩状态切换
   const handleExpandToggle = (expand: boolean) => {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
+    const collapsedSize = getSurfaceSize(false);
+    const expandedSize = getSurfaceSize(true);
     
     if (expand) {
-      // 从小球展开到聊天窗口
       const ballCenter = {
-        x: windowWidth - position.x - BALL_SIZE.width / 2,
-        y: windowHeight - position.y - BALL_SIZE.height / 2
+        x: windowWidth - position.x - collapsedSize.width / 2,
+        y: windowHeight - position.y - collapsedSize.height / 2
       };
       
-      // 计算展开后的位置，确保窗口完全在视图内
       const newPos = calculateValidPosition({
-        x: windowWidth - ballCenter.x - CHAT_SIZE.width / 2,
-        y: windowHeight - ballCenter.y - CHAT_SIZE.height / 2
+        x: windowWidth - ballCenter.x - expandedSize.width / 2,
+        y: windowHeight - ballCenter.y - expandedSize.height / 2
       }, true);
       
       setPosition(newPos);
       setIsExpanded(true);
     } else {
-      // 从聊天窗口收缩到小球
       const chatCenter = {
-        x: windowWidth - position.x - CHAT_SIZE.width / 2,
-        y: windowHeight - position.y - CHAT_SIZE.height / 2
+        x: windowWidth - position.x - expandedSize.width / 2,
+        y: windowHeight - position.y - expandedSize.height / 2
       };
       
-      // 计算收缩后的位置
       const newPos = calculateValidPosition({
-        x: windowWidth - chatCenter.x - BALL_SIZE.width / 2,
-        y: windowHeight - chatCenter.y - BALL_SIZE.height / 2
+        x: windowWidth - chatCenter.x - collapsedSize.width / 2,
+        y: windowHeight - chatCenter.y - collapsedSize.height / 2
       }, false);
       
       setPosition(newPos);
@@ -90,7 +102,6 @@ const Chat: React.FC = () => {
     }
   };
 
-  // 消息处理函数
   const sendMessage = (message: string) => {
     const newUserMessage: ChatMessage = { role: 'user', content: message };
     
@@ -251,7 +262,6 @@ const Chat: React.FC = () => {
     };
   };
 
-  // 提交处理函数
   const handleSubmit = () => {
     if (!inputValue.trim() || isLoading) return;
     const messageToSend = inputValue;
@@ -259,165 +269,91 @@ const Chat: React.FC = () => {
     sendMessage(messageToSend);
   };
 
-  // 拖拽相关处理
+  const startDragging = (clientX: number, clientY: number, rect: DOMRect) => {
+    setIsDragging(true);
+    setDragOffset({
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    });
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        if (isExpanded) {
-          // 获取窗口尺寸
-          const windowWidth = window.innerWidth;
-          const windowHeight = window.innerHeight;
-          const chatWidth = 760;
-          const chatHeight = 800;
-          
-          // 计算新位置
-          const x = e.clientX - dragOffset.x;
-          const y = e.clientY - dragOffset.y;
-          
-          // 添加边界缓冲区
-          const buffer = 5;
-          const maxX = windowWidth - chatWidth - buffer;
-          const maxY = windowHeight - chatHeight - buffer;
-          
-          // 严格限制边界
-          const boundedX = Math.max(buffer, Math.min(x, maxX));
-          const boundedY = Math.max(buffer, Math.min(y, maxY));
-          
-          // 计算最终位置
-          const finalX = windowWidth - boundedX - chatWidth;
-          const finalY = windowHeight - boundedY - chatHeight;
-          
-          // 确保不会超出屏幕
-          if (finalX >= -buffer && 
-              finalX <= windowWidth - buffer && 
-              finalY >= -buffer && 
-              finalY <= windowHeight - buffer) {
-            setPosition({
-              x: finalX,
-              y: finalY
-            });
-          }
-        } else {
-          // 小球状态的拖拽处理
-          const buffer = 5;
-          const maxRight = window.innerWidth - 80 - buffer;
-          const maxBottom = window.innerHeight - 60 - buffer;
-          
-          const newRight = Math.min(
-            maxRight,
-            Math.max(buffer, window.innerWidth - e.clientX - dragOffset.x)
-          );
-          const newBottom = Math.min(
-            maxBottom,
-            Math.max(buffer, window.innerHeight - e.clientY - dragOffset.y)
-          );
-          
-          setPosition({ x: newRight, y: newBottom });
-        }
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+
+      if (e.cancelable) {
+        e.preventDefault();
       }
+
+      const { width, height } = getSurfaceSize(isExpanded);
+      const maxRight = Math.max(BUFFER, window.innerWidth - width - BUFFER);
+      const maxBottom = Math.max(BUFFER, window.innerHeight - height - BUFFER);
+
+      const newRight = Math.min(
+        maxRight,
+        Math.max(BUFFER, window.innerWidth - e.clientX - dragOffset.x)
+      );
+      const newBottom = Math.min(
+        maxBottom,
+        Math.max(BUFFER, window.innerHeight - e.clientY - dragOffset.y)
+      );
+
+      setPosition({ x: newRight, y: newBottom });
     };
 
-    const handleMouseUp = () => {
-      if (isDragging) {
-        // 添加边界检查
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        
-        setPosition(prev => {
-          let { x, y } = prev;
-          const buffer = 5;
-          
-          // 展开状态
-          if (isExpanded) {
-            x = Math.max(buffer, Math.min(x, windowWidth - 760 - buffer));
-            y = Math.max(buffer, Math.min(y, windowHeight - 800 - buffer));
-          } else {
-            // 小球状态
-            x = Math.max(buffer, Math.min(x, windowWidth - 80 - buffer));
-            y = Math.max(buffer, Math.min(y, windowHeight - 60 - buffer));
-          }
-          
-          return { x, y };
-        });
-        
-        setIsDragging(false);
-      }
+    const handlePointerUp = () => {
+      if (!isDragging) return;
+
+      setPosition(prev => calculateValidPosition(prev, isExpanded));
+      setIsDragging(false);
     };
 
-    // 添加窗口大小变化处理
     const handleResize = () => {
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      const buffer = 5;
-      
-      setPosition(prev => {
-        let { x, y } = prev;
-        
-        if (isExpanded) {
-          x = Math.max(buffer, Math.min(x, windowWidth - 760 - buffer));
-          y = Math.max(buffer, Math.min(y, windowHeight - 800 - buffer));
-        } else {
-          x = Math.max(buffer, Math.min(x, windowWidth - 80 - buffer));
-          y = Math.max(buffer, Math.min(y, windowHeight - 60 - buffer));
-        }
-        
-        return { x, y };
-      });
+      setPosition(prev => calculateValidPosition(prev, isExpanded));
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove, { passive: false });
+    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointercancel', handlePointerUp);
     window.addEventListener('resize', handleResize);
     
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+      document.removeEventListener('pointercancel', handlePointerUp);
       window.removeEventListener('resize', handleResize);
     };
   }, [isDragging, dragOffset, isExpanded]);
 
-  // 响应式处理
-  const isMobile = window.innerWidth <= 768;
-  
   useEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth <= 768;
-      if (isMobile && isExpanded) {
-        setPosition({ x: 0, y: 0 });
-      } else {
-        setPosition(prev => ({
-          x: Math.min(prev.x, window.innerWidth - 80),
-          y: Math.min(prev.y, window.innerHeight - 60)
-        }));
-      }
+      setPosition(prev => calculateValidPosition(prev, isExpanded));
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isExpanded]);
 
-  // 样式计算
+  const expandedSize = isExpanded ? getExpandedSize() : null;
   const wrapperStyle = {
-    right: isMobile && isExpanded ? '0' : `${position.x}px`,
-    bottom: isMobile && isExpanded ? '0' : `${position.y}px`,
+    right: `${position.x}px`,
+    bottom: `${position.y}px`,
+    width: expandedSize ? `${expandedSize.width}px` : undefined,
+    height: expandedSize ? `${expandedSize.height}px` : undefined,
     transition: isDragging ? 'none' : 'all 0.3s ease'
   };
 
-  // 渲染组件
   return (
     <div className={`chat-wrapper ${isExpanded ? 'expanded' : ''}`} style={wrapperStyle}>
       {!isExpanded ? (
         <ChatBall 
           ballRef={ballRef}
           handleBallClick={() => handleExpandToggle(true)}
-          handleMouseDown={(e) => {
+          handlePointerDown={(e) => {
             if (ballRef.current) {
-              setIsDragging(true);
+              e.preventDefault();
               const rect = ballRef.current.getBoundingClientRect();
-              setDragOffset({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-              });
+              startDragging(e.clientX, e.clientY, rect);
             }
           }}
         />
@@ -431,14 +367,11 @@ const Chat: React.FC = () => {
           setInputValue={setInputValue}
           handleSubmit={handleSubmit}
           handleClose={() => handleExpandToggle(false)}
-          handleHeaderMouseDown={(e) => {
+          handleHeaderPointerDown={(e) => {
             if (headerRef.current) {
-              setIsDragging(true);
+              e.preventDefault();
               const rect = headerRef.current.getBoundingClientRect();
-              setDragOffset({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-              });
+              startDragging(e.clientX, e.clientY, rect);
             }
           }}
           messagesEndRef={messagesEndRef}

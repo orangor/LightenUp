@@ -1,23 +1,66 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Tabs, message } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Form, Input, Button, Tabs, message, Checkbox } from 'antd';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.scss';
 
+const REMEMBERED_LOGIN_KEY = 'lightenup_remembered_login';
+
+type LoginFormValues = {
+  email: string;
+  password: string;
+  remember?: boolean;
+};
+
+type RegisterFormValues = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
 const LoginPage: React.FC = () => {
   const { login, register, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('login');
+  const [loginForm] = Form.useForm<LoginFormValues>();
 
-  const handleLogin = async (values: { email: string; password: string }) => {
+  useEffect(() => {
+    const rememberedLogin = localStorage.getItem(REMEMBERED_LOGIN_KEY);
+
+    if (!rememberedLogin) {
+      loginForm.setFieldsValue({ remember: false });
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rememberedLogin) as Partial<LoginFormValues>;
+      loginForm.setFieldsValue({
+        email: parsed.email ?? '',
+        password: parsed.password ?? '',
+        remember: Boolean(parsed.email && parsed.password),
+      });
+    } catch {
+      localStorage.removeItem(REMEMBERED_LOGIN_KEY);
+      loginForm.setFieldsValue({ remember: false });
+    }
+  }, [loginForm]);
+
+  const handleLogin = async (values: LoginFormValues) => {
     try {
       await login(values.email, values.password);
+      if (values.remember) {
+        localStorage.setItem(
+          REMEMBERED_LOGIN_KEY,
+          JSON.stringify({ email: values.email, password: values.password }),
+        );
+      } else {
+        localStorage.removeItem(REMEMBERED_LOGIN_KEY);
+      }
       message.success('登录成功');
     } catch (error) {
-      // 错误已在 AuthService 中统一处理
     }
   };
 
-  const handleRegister = async (values: { email: string; password: string; confirmPassword: string }) => {
+  const handleRegister = async (values: RegisterFormValues) => {
     if (values.password !== values.confirmPassword) {
       message.error('两次输入的密码不一致');
       return;
@@ -38,8 +81,9 @@ const LoginPage: React.FC = () => {
       label: '登录',
       children: (
         <Form
+          form={loginForm}
           name="login"
-          initialValues={{ remember: true }}
+          initialValues={{ remember: false }}
           onFinish={handleLogin}
           size="large"
           layout="vertical"
@@ -51,13 +95,28 @@ const LoginPage: React.FC = () => {
               { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
           >
-            <Input prefix={<MailOutlined className="site-form-item-icon" />} placeholder="请输入邮箱账号" />
+            <Input
+              prefix={<MailOutlined className="site-form-item-icon" />}
+              placeholder="请输入邮箱账号"
+              autoComplete="username"
+            />
           </Form.Item>
           <Form.Item
             name="password"
             rules={[{ required: true, message: '请输入密码' }]}
           >
-            <Input.Password prefix={<LockOutlined className="site-form-item-icon" />} placeholder="请输入登录密码" />
+            <Input.Password
+              prefix={<LockOutlined className="site-form-item-icon" />}
+              placeholder="请输入登录密码"
+              autoComplete="current-password"
+            />
+          </Form.Item>
+          <Form.Item
+            name="remember"
+            valuePropName="checked"
+            className="login-options"
+          >
+            <Checkbox className="remember-checkbox">记住密码</Checkbox>
           </Form.Item>
           <Form.Item>
             <Button
@@ -90,7 +149,11 @@ const LoginPage: React.FC = () => {
               { type: 'email', message: '请输入有效的邮箱地址' },
             ]}
           >
-            <Input prefix={<MailOutlined className="site-form-item-icon" />} placeholder="请输入邮箱账号" />
+            <Input
+              prefix={<MailOutlined className="site-form-item-icon" />}
+              placeholder="请输入邮箱账号"
+              autoComplete="username"
+            />
           </Form.Item>
           <Form.Item
             name="password"

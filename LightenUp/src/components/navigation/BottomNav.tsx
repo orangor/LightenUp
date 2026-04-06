@@ -25,12 +25,18 @@ const Icons = {
       <circle cx="12" cy="12" r="3"></circle>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
     </svg>
+  ),
+  Soul: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"></path>
+    </svg>
   )
 };
 
 const getIcon = (path: string) => {
   if (path === '/') return Icons.Home;
   if (path.startsWith('/workflow')) return Icons.Workflow;
+  if (path.startsWith('/soul')) return Icons.Soul;
   if (path.startsWith('/settings')) return Icons.Settings;
   return Icons.Home;
 };
@@ -66,6 +72,10 @@ const BottomNav: React.FC = () => {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
+  // 检查是否需要隐藏底部导航栏（例如：SoulHub的子页面）
+  const hideBottomNavPaths = ['/soul/sedona', '/soul/report'];
+  const shouldHideBottomNav = hideBottomNavPaths.some(path => location.pathname.startsWith(path));
+
   const handleNavigation = (path: string) => {
     navigate(path, { replace: true });
     setDrawerOpen(false);
@@ -78,10 +88,11 @@ const BottomNav: React.FC = () => {
 
   return (
     <>
-      <nav className="top-nav">
-        <div className="nav-inner">
-          <div className="brand" onClick={() => handleNavigation('/')}>{BRAND?.logo && <span className="nav-icon" style={{marginRight: 6}}>{BRAND.logo}</span>}{BRAND?.name || 'App'}</div>
-          <div className="nav-items">
+      {!shouldHideBottomNav && (
+        <nav className="top-nav">
+          <div className="nav-inner">
+            <div className="brand" onClick={() => handleNavigation('/')}>{BRAND?.logo && <span className="nav-icon" style={{marginRight: 6}}>{BRAND.logo}</span>}{BRAND?.name || 'App'}</div>
+            <div className="nav-items">
             {NAV_ITEMS.map((item: NavItem) => {
               const isActive = matchesItemOrChildren(location.pathname, item);
               const hasChildren = Array.isArray(item.children) && item.children.length > 0;
@@ -130,8 +141,10 @@ const BottomNav: React.FC = () => {
           </button>
         </div>
       </nav>
+      )}
 
       {/* 底部导航栏（移动端显示） */}
+      {!shouldHideBottomNav && (
       <nav className="bottom-nav-bar">
         {NAV_ITEMS.map((item: NavItem) => {
           const isActive = matchesItemOrChildren(location.pathname, item);
@@ -152,6 +165,7 @@ const BottomNav: React.FC = () => {
           );
         })}
       </nav>
+      )}
 
       {/* 通过 Portal 渲染到 body，避免被其他层级遮挡 */}
       {drawerOpen && createPortal(

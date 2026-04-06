@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import moment from 'moment'
 import { EnergyService } from '../../api/energyService'
 import { TrendPoint } from '../../api/energyTypes'
-import { useNavigate } from 'react-router-dom'
 import TrendChart from './components/TrendChart'
 import StatsOverview from './components/StatsOverview'
 import EnergyTimeline from './components/EnergyTimeline'
 import EnergyMatrix from './components/EnergyMatrix'
+import {
+  ENERGY_RANGE_OPTIONS,
+  EnergyMatrixRange,
+  getEnergyRangePeriod,
+} from './components/energyRange'
 import './EnergyTrend.scss'
 
 export default function EnergyTrend() {
@@ -14,14 +19,21 @@ export default function EnergyTrend() {
   }>({ raw: [] })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
+  const [matrixRange, setMatrixRange] = useState<EnergyMatrixRange>('7d')
+  const currentPeriod = useMemo(() => getEnergyRangePeriod(moment(), matrixRange), [matrixRange])
 
   useEffect(() => {
     let mounted = true
     setLoading(true)
+    setError(null)
 
     Promise.all([
-      EnergyService.getTrend({ limit: 50, group_by: 'raw' }),
+      EnergyService.getTrend({
+        start_date: currentPeriod.start.format('YYYY-MM-DD'),
+        end_date: currentPeriod.end.format('YYYY-MM-DD'),
+        limit: currentPeriod.fetchLimit,
+        group_by: 'raw',
+      }),
     ])
       .then(([resRaw]) => {
         if (!mounted) return
@@ -38,15 +50,10 @@ export default function EnergyTrend() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [currentPeriod])
 
   return (
     <div className="energy-trend-container">
-      <header className="header">
-       
-      
-      </header>
-
       <main className="content-wrapper">
         {loading && (
           <div className="status-state">
@@ -66,23 +73,40 @@ export default function EnergyTrend() {
           </div>
         )}
 
-        {!loading && !error && data.raw.length > 0 && (
+        {!loading && !error && (
           <>
-            {/* 能量矩阵组件 - 支持响应式，无需 desktop-only 包裹 */}
-            {/* 矩阵组件内部现在自行管理数据获取，不再依赖父组件传递的 points */}
-            <EnergyMatrix />
+            <div className="trend-toolbar">
+              <div className="toolbar-copy">
+                <h2 className="toolbar-title">能量趋势</h2>
+                <span className="toolbar-subtitle">{currentPeriod.label}</span>
+              </div>
+              <div className="range-switch">
+                {ENERGY_RANGE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={option.value === matrixRange ? 'range-btn active' : 'range-btn'}
+                    onClick={() => setMatrixRange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            <StatsOverview points={data.raw} />
+            <EnergyMatrix range={matrixRange} />
+
+            {data.raw.length > 0 && <StatsOverview points={data.raw} />}
           </>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && data.raw.length > 0 && (
           <>
             <div className="desktop-only">
               <TrendChart 
                 points={data.raw} 
                 title="能量波段图" 
-                subtitle="近50次能量记录轨迹" 
+                subtitle={`${currentPeriod.label} 能量记录轨迹`} 
               />
             </div>
             

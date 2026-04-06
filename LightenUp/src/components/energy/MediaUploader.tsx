@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AssetsService } from '../../api/apiService';
 import CameraModal from '../common/CameraModal';
@@ -18,30 +18,35 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showCameraModal, setShowCameraModal] = useState(false);
-  
-  // 隐藏的 input 引用
+  const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const dragDepthRef = useRef(0);
+  const isMobile = useMemo(
+    () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+    []
+  );
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     if (selectedFiles.length === 0) return;
 
-    // 关闭选择面板
     setShowActionSheet(false);
-    
     await uploadFiles(selectedFiles);
-    
-    // 清空 input，允许重复选择同一文件
     e.target.value = '';
   };
 
   const uploadFiles = async (fileList: File[]) => {
+    const remainingCount = maxImages - files.length;
+    const nextFiles = fileList.slice(0, Math.max(remainingCount, 0));
+
+    if (nextFiles.length === 0) return;
+
     setIsUploading(true);
     try {
-      const uploadPromises = fileList.map(async (file) => {
+      const uploadPromises = nextFiles.map(async (file) => {
         const isImage = file.type.startsWith('image');
-        
+
         if (!isImage) {
           return {
             type: 'video' as 'image' | 'video',
@@ -76,68 +81,115 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
     onFilesChange(newFiles);
   };
 
-  // 触发相册选择
   const handleGalleryClick = () => {
+    setShowActionSheet(false);
     fileInputRef.current?.click();
   };
 
-  // 触发拍照
   const handleCameraClick = () => {
-    // 检测是否为移动设备
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
     if (isMobile) {
-      // 移动端直接触发 capture input
+      setShowActionSheet(false);
       cameraInputRef.current?.click();
     } else {
-      // PC 端打开摄像头模态框
-      setShowActionSheet(false); // 关闭底部菜单
+      setShowActionSheet(false);
       setShowCameraModal(true);
     }
   };
 
+  const handleUploadButtonClick = () => {
+    if (isMobile) {
+      setShowActionSheet(true);
+      return;
+    }
+
+    handleGalleryClick();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current += 1;
+    setIsDragActive(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current = Math.max(dragDepthRef.current - 1, 0);
+
+    if (dragDepthRef.current === 0) {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepthRef.current = 0;
+    setIsDragActive(false);
+
+    const droppedFiles = Array.from(e.dataTransfer.files || []);
+    if (droppedFiles.length === 0) return;
+
+    await uploadFiles(droppedFiles);
+  };
+
   return (
     <>
-      <div className="media-uploader-grid">
-        <AnimatePresence>
-          {files.map((file, index) => (
-            <motion.div
-              key={file.url}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.5 }}
-              className="media-item"
-            >
-              {file.type === 'video' ? (
-                <video src={file.url} className="media-preview" />
-              ) : (
-                <img src={file.url} alt={`upload-${index}`} className="media-preview" />
-              )}
-              <button
-                onClick={() => removeFile(index)}
-                className="remove-btn"
+      <div
+        className={`media-uploader ${isDragActive ? 'drag-active' : ''}`}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <div className="media-uploader-grid">
+          <AnimatePresence>
+            {files.map((file, index) => (
+              <motion.div
+                key={file.url}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                className="media-item"
               >
-                ✕
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                {file.type === 'video' ? (
+                  <video src={file.url} className="media-preview" />
+                ) : (
+                  <img src={file.url} alt={`upload-${index}`} className="media-preview" />
+                )}
+                <button
+                  onClick={() => removeFile(index)}
+                  className="remove-btn"
+                >
+                  ✕
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
-        {/* 上传按钮 - 触发 ActionSheet */}
-        {files.length < maxImages && (
-          <button 
-            className="upload-btn"
-            onClick={() => setShowActionSheet(true)}
-            disabled={isUploading}
-          >
-            <span className="upload-icon">+</span>
-            <span className="upload-text">
-              {files.length}/{maxImages}
-            </span>
-          </button>
-        )}
+          {files.length < maxImages && (
+            <button
+              className={`upload-btn ${isDragActive ? 'is-drag-active' : ''}`}
+              onClick={handleUploadButtonClick}
+              disabled={isUploading}
+            >
+              <span className="upload-icon">+</span>
+              <span className="upload-text">
+                {isUploading ? '上传中...' : `${files.length}/${maxImages}`}
+              </span>
+              <span className="upload-hint">
+                {isMobile ? '点击选择' : '拖拽或点击'}
+              </span>
+            </button>
+          )}
+        </div>
 
-        {/* 隐藏的文件输入框 - 相册 */}
         <input
           ref={fileInputRef}
           type="file"
@@ -147,8 +199,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
           onChange={handleFileSelect}
           style={{ display: 'none' }}
         />
-        
-        {/* 隐藏的文件输入框 - 拍照 (移动端) */}
+
         <input
           ref={cameraInputRef}
           type="file"
@@ -158,9 +209,14 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
           onChange={handleFileSelect}
           style={{ display: 'none' }}
         />
+
+        {!isMobile && (
+          <button className="desktop-camera-btn" onClick={handleCameraClick} type="button">
+            也可以直接拍一张
+          </button>
+        )}
       </div>
 
-      {/* ActionSheet 底部弹窗 */}
       <AnimatePresence>
         {showActionSheet && (
           <>
@@ -183,13 +239,13 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
                   拍摄
                 </button>
                 <button className="action-item" onClick={handleGalleryClick}>
-                  从手机相册选择
+                  {isMobile ? '从手机相册选择' : '从电脑选择'}
                 </button>
               </div>
-              
+
               <div className="mt-2">
-                <button 
-                  className="action-item cancel-item" 
+                <button
+                  className="action-item cancel-item"
                   onClick={() => setShowActionSheet(false)}
                 >
                   取消
@@ -200,8 +256,7 @@ const MediaUploader: React.FC<MediaUploaderProps> = ({
         )}
       </AnimatePresence>
 
-      {/* PC 端拍照模态框 */}
-      <CameraModal 
+      <CameraModal
         visible={showCameraModal}
         onClose={() => setShowCameraModal(false)}
         onCapture={(file) => {

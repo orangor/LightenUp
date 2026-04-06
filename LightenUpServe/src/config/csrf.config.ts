@@ -16,7 +16,7 @@ export const csrfConfig = {
     redis: {
       prefix: 'csrf:',
       value: 'valid',
-      expiry: 24 * 60 * 60, // 24小时
+      expiry: 7 * 24 * 60 * 60,
     },
     cookie: {
       name: 'csrf-token',

@@ -13,7 +13,7 @@ interface ChatWindowProps {
   setInputValue: (value: string) => void;
   handleSubmit: () => void;
   handleClose: () => void;
-  handleHeaderMouseDown: (e: React.MouseEvent) => void;
+  handleHeaderPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
   inputRef: React.RefObject<HTMLTextAreaElement>;
 }
@@ -27,7 +27,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   setInputValue,
   handleSubmit,
   handleClose,
-  handleHeaderMouseDown,
+  handleHeaderPointerDown,
   messagesEndRef,
   inputRef
 }) => {
@@ -79,10 +79,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       <div 
         ref={headerRef} 
         className="chat-header" 
-        onMouseDown={handleHeaderMouseDown}
+        onPointerDown={handleHeaderPointerDown}
       >
         <h2>{CHAT_TEXT.title}</h2>
-        <button className="minimize-button" onClick={handleClose}>
+        <button
+          className="minimize-button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={handleClose}
+        >
           <span className="minimize-icon">—</span>
         </button>
       </div>
